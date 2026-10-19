@@ -9,7 +9,7 @@ on:
         description: "全件を取り直す（1 で有効）"
         default: "0"
   issues:
-    types: [opened]          # ページの「追加」ボタンから
+    types: [opened, reopened]   # ページの「追加」ボタンから（失敗したものは Issue を Reopen するとやり直す）
   push:
     branches: [main]         # 手でファイルを直したとき
 
@@ -19,8 +19,11 @@ permissions:
   pages: write
   id-token: write
 
+# 自動更新どうしは1つずつ順番に実行する。ポストの追加は1件ずつ別に実行する
+# （同じグループに入れると、待ちが2件以上になったときに古い待ちが取り消され、追加が消えるため）
+# 同時に実行して保存がぶつかった場合は、save.sh が最新の状態からやり直す
 concurrency:
-  group: update
+  group: update-${{ github.event_name == 'issues' && github.event.issue.number || 'auto' }}
   cancel-in-progress: false
 
 jobs:
@@ -36,6 +39,8 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main            # 待っている間にほかの実行が保存した分も含めた、最新の状態から始める
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -44,9 +49,11 @@ jobs:
       - name: Get shared scripts
         run: |
           base=https://raw.githubusercontent.com/${{ github.repository_owner }}/mechatua-log/main/common
+          mkdir -p /tmp/shared
           for f in fetch_streams.py add_item.py; do
-            if curl -fsSL "$base/$f" -o "/tmp/$f"; then mv "/tmp/$f" "$f"; echo "共通の $f を使用"; else echo "共通の $f を取得できなかったため手元のものを使用"; fi
+            if curl -fsSL "$base/$f" -o "/tmp/shared/$f"; then cp "/tmp/shared/$f" "$f"; echo "共通の $f を使用"; else echo "共通の $f を取得できなかったため手元のものを使用"; fi
           done
+          curl -fsSL "$base/save.sh" -o /tmp/shared/save.sh || echo "共通の save.sh を取得できませんでした"
 
       - name: Add item from issue
         if: github.event_name == 'issues'
@@ -61,15 +68,22 @@ jobs:
         run: python fetch_streams.py
 
       - name: Commit
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          IS_ISSUE: ${{ github.event_name == 'issues' && '1' || '0' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A *.json
-          git diff --cached --quiet || git commit -m "配信データを更新"
-          # 共通のプログラムで上書きした .py は保存しない（手元の変更が残っていると pull できないため元に戻す）
-          git checkout -- fetch_streams.py add_item.py
-          git pull --rebase
-          git push
+          if [ -f /tmp/shared/save.sh ]; then
+            bash /tmp/shared/save.sh
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A *.json
+            git diff --cached --quiet || git commit -m "配信データを更新"
+            git checkout -- fetch_streams.py add_item.py
+            git pull --rebase
+            git push
+          fi
 
       - name: Close issue
         if: github.event_name == 'issues'
@@ -89,3 +103,4 @@ jobs:
           path: .
       - id: deploy
         uses: actions/deploy-pages@v4
+        continue-on-error: true   # 同時に公開が重なって失敗しても、データは保存済みで次の更新で公開される
