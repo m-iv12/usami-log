@@ -52,11 +52,14 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .brand{display:flex;flex-direction:column;gap:0;line-height:1.1}
 h1{margin:0;font-family:var(--font-body);font-weight:700;font-size:clamp(1.3rem,4.6vw,1.75rem);color:var(--ink);letter-spacing:.06em;line-height:1.35;text-wrap:balance}
 .badge{display:none}
-/* まとめページへ戻るリンク（config.json の home。省略時は ../mechatua-log/） */
-.home{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;margin:0 0 3px;font-family:var(--font-label);font-weight:600;font-size:.68rem;letter-spacing:.14em;
-  color:var(--ink-soft);text-decoration:none;border-bottom:1px dashed transparent}
-.home::before{content:"";width:6px;height:6px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-right:2px}
-.home:hover{color:var(--main-d);border-bottom-color:currentColor}
+/* まとめページ・ほかのメンバーへのリンク（config.json の nav。省略時は MECHATU-A の8人） */
+.mnav{display:flex;flex-wrap:wrap;align-items:center;gap:3px 10px;margin:0 0 6px;padding-left:2px;font-size:.72rem;line-height:1.5}
+.mnav a,.mnav span{display:inline-flex;align-items:center;gap:4px;color:var(--ink-soft);text-decoration:none;white-space:nowrap}
+.mnav a:hover{color:var(--ink);text-decoration:underline}
+.mnav .hm{font-family:var(--font-label);font-weight:600;letter-spacing:.14em;padding-left:9px;position:relative}
+.mnav .hm::before{content:"";position:absolute;left:1px;top:50%;width:5px;height:5px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-50%) rotate(45deg)}
+.mnav .mb::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c,var(--muted));flex:none}
+.mnav .cur{color:var(--ink);font-weight:700}
 /* 表示切替＝フォルダのインデックスタブ */
 .seg{display:flex;gap:4px;align-items:flex-end}
 .seg button{border:0;background:var(--main-xl);color:var(--ink-soft);font-family:var(--font-label);font-weight:600;letter-spacing:.12em;
@@ -456,7 +459,7 @@ h1{font-size:1rem;letter-spacing:.02em;white-space:nowrap}
 <div class="wrap">
   <aside class="side">
   <header class="top">
-    <div class="brand"><a class="home" id="home" href="#" hidden></a><h1><span class="own-name"></span><span class="br"></span>配信スケジュール</h1><span class="badge">Sample</span></div>
+    <div class="brand"><nav class="mnav" id="mnav" aria-label="ページの移動" hidden></nav><h1><span class="own-name"></span><span class="br"></span>配信スケジュール</h1><span class="badge">Sample</span></div>
     <div class="seg" role="tablist" aria-label="表示切り替え">
       <button id="v-week" role="tab">週</button><button id="v-month" role="tab">月</button>
     </div>
@@ -579,12 +582,31 @@ function applyConfig(cfg){
   document.title=site;
   document.querySelector('meta[name="apple-mobile-web-app-title"]').content=site;
   document.querySelectorAll(".own-name").forEach(el=>el.textContent=OWN);
-  const home=cfg.home===undefined?{label:"MECHATU-A",url:"../mechatua-log/"}:cfg.home;   // "home": null で非表示
-  const hl=document.getElementById("home");
-  if(home&&home.url){hl.href=home.url;hl.textContent=home.label||"一覧へ";hl.hidden=false}else hl.hidden=true;
+  renderNav(cfg.nav===undefined?NAV_DEFAULT:cfg.nav);
   const esc=x=>String(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
   const words=[OWN,cfg.name_en,...(cfg.collab_keywords||[]),"にじさんじ"].filter(Boolean).map(esc);
   TAIL_RE=new RegExp("\\s*【[^】]*("+words.join("|")+")[^】]*】\\s*$","i");
+}
+
+// ---- まとめページ・ほかのメンバーへのリンク ----
+// config.json に "nav" を書けば置き換え、"nav": null で非表示。repo は m-iv12.github.io/ の後ろのリポジトリ名
+const NAV_DEFAULT={home:{label:"MECHATU-A",url:"../mechatua-log/"},members:[
+  {repo:"saiki-log",label:"佐伯"},{repo:"akagi-log",label:"赤城"},{repo:"usami-log",label:"宇佐美"},{repo:"hibachi-log",label:"緋八"},
+  {repo:"hoshirube-log",label:"星導"},{repo:"murakumo-log",label:"叢雲"},{repo:"koyanagi-log",label:"小柳"},{repo:"inami-log",label:"伊波"}]};
+function renderNav(nav){
+  const el=document.getElementById("mnav");
+  if(!nav){el.hidden=true;return}
+  const here=location.pathname.split("/").filter(Boolean);
+  let h=nav.home&&nav.home.url?`<a class="hm" href="${nav.home.url}">${nav.home.label||"一覧"}</a>`:"";
+  for(const m of nav.members||[]){
+    h+=here.includes(m.repo)?`<span class="mb cur" data-repo="${m.repo}">${m.label}</span>`:`<a class="mb" href="../${m.repo}/" data-repo="${m.repo}">${m.label}</a>`;
+  }
+  el.innerHTML=h;el.hidden=false;
+  // 各メンバーの色は、それぞれの config.json から取る（読めなければ灰色のまま）
+  el.querySelectorAll("[data-repo]").forEach(a=>{
+    fetch("../"+a.dataset.repo+"/config.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(c=>{
+      const t=(c&&c.theme)||{};a.style.setProperty("--c",t.main||(c?"#7389b5":""))}).catch(()=>{});
+  });
 }
 
 // ---- *.json を読み込む ----
