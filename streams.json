@@ -12190,5 +12190,33 @@
   "own": false,
   "game": "同時視聴",
   "collabs": []
+ },
+ {
+  "id": "vRUeCordebI",
+  "title": "【デス桃太郎】おっかねえ昔話【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "done",
+  "start": "2026-10-19T11:01:24Z",
+  "end": "2026-10-19T11:54:42Z",
+  "url": "https://www.youtube.com/watch?v=vRUeCordebI",
+  "thumb": "https://i.ytimg.com/vi/vRUeCordebI/mqdefault.jpg",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "デス桃太郎",
+  "collabs": []
+ },
+ {
+  "id": "5IVhh_uxZlE",
+  "title": "【スト6】正義か悪か言ってみましょーーーーーー！！！！！【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "live",
+  "start": "2026-10-19T12:04:52Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=5IVhh_uxZlE",
+  "thumb": "https://i.ytimg.com/vi/5IVhh_uxZlE/mqdefault_live.jpg",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "スト6",
+  "collabs": []
  }
 ]
