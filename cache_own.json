@@ -11598,11 +11598,11 @@
   "channel": "宇佐美リト / Usami Rito【にじさんじ】",
   "channel_id": "UCambvP8yxNDot4FzQc9cgiw",
   "url": "https://www.youtube.com/watch?v=5IVhh_uxZlE",
-  "thumb": "https://i.ytimg.com/vi/5IVhh_uxZlE/mqdefault_live.jpg",
+  "thumb": "https://i.ytimg.com/vi/5IVhh_uxZlE/mqdefault.jpg",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-10-19T12:04:52Z",
-  "end": null,
+  "end": "2026-10-19T13:46:41Z",
   "own": true
  }
 }
