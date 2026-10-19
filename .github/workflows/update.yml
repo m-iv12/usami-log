@@ -40,6 +40,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      # 処理のプログラムは8人共通のもの（mechatua-log/common/）を毎回取ってきて使う。取れなかったときは手元のものを使う
+      - name: Get shared scripts
+        run: |
+          base=https://raw.githubusercontent.com/${{ github.repository_owner }}/mechatua-log/main/common
+          for f in fetch_streams.py add_item.py; do
+            if curl -fsSL "$base/$f" -o "/tmp/$f"; then mv "/tmp/$f" "$f"; echo "共通の $f を使用"; else echo "共通の $f を取得できなかったため手元のものを使用"; fi
+          done
+
       - name: Add item from issue
         if: github.event_name == 'issues'
         env:
