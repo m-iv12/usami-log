@@ -14,6 +14,7 @@
 import json
 import os
 import re
+import unicodedata
 import sys
 import urllib.parse
 import urllib.request
@@ -298,6 +299,68 @@ def update_partners(since, scanned):
     return cache
 
 
+# ---------- コラボの裏付け ----------
+# 自動で拾う条件（キーワードがタイトルか概要欄にある）は、概要欄のユニットメンバー一覧などにも当たってしまう。
+# そこで、相手のタイトルに自分の名前がない配信は、次のどれかで裏付けが取れるときだけコラボとして付ける。
+#   自分のタイトルに相手の名前がある／同じゲーム／どちらかのタイトルにコラボを示す語（w/・コラボ・大会・同期・MECHATU-A など）がある
+GROUP_RE = re.compile(r"MECHATU|めちゃつえ|メカツア|Dytica|ディティカ|Oriens|オリエンス|同期|男子|メンズ|全員|皆さん|みんな", re.I)
+CUE_RE = re.compile(r"w\s*[/／]|ｗ\s*[/／]|(?<![a-z])with(?![a-z])|コラボ|フルパ|大会|カスタム|スクリム|合同|杯|[#＃](?!\s*[0-9０-９])", re.I)
+GAME_ALIAS = {"ow": ["ow", "ow2", "オーバーウォッチ", "オーバーウォッチ2", "overwatch", "overwatch2"],
+              "lol": ["lol", "leagueoflegends", "リーグオブレジェンド"],
+              "valorant": ["valorant", "valo", "ヴァロ", "ヴァロラント"],
+              "apex": ["apex", "apexlegends", "エーペックス"],
+              "amongus": ["amongus", "アモアス", "アモングアス"],
+              "splatoon": ["スプラ", "スプラ3", "スプラトゥーン", "スプラトゥーン3", "splatoon", "splatoon3"],
+              "51": ["世界のアソビ大全51", "世界の遊び大全51", "アソビ大全", "遊び大全"]}
+
+
+def game_key(rec):
+    """ゲーム名の書き方の違い（全角半角・空白・記号・大文字小文字・別表記）をそろえた比較用の値。"""
+    g = rec.get("game") or classify(rec.get("title", ""))
+    k = re.sub(r"[\s・:：\-'’!！?？.。、,]|コラボ$", "", unicodedata.normalize("NFKC", str(g))).lower()
+    for canon, words in GAME_ALIAS.items():
+        if k in words:
+            return canon
+    for canon, words in GAME_ALIAS.items():
+        if any(len(w) >= 4 and w in k for w in words):
+            return canon
+    return k
+
+
+def same_game(a, b):
+    """同じゲームか。片方がもう片方を含む場合も同じとみなす（マリオカート8 と マリオカート8DX など）。"""
+    ka, kb = game_key(a), game_key(b)
+    if not ka or not kb or ka in ("その他", "雑談"):
+        return False
+    return ka == kb or (min(len(ka), len(kb)) >= 4 and (ka.startswith(kb) or kb.startswith(ka)))
+
+
+def channel_name_pattern(channel):
+    """チャンネル名（例：星導ショウ / Hoshirube Sho【にじさんじ】）から、フルネーム・名字・下の名前の検索パターンを作る。"""
+    jp = re.split(r"\s*[/／【]", channel or "")[0].strip()
+    words = [jp] if len(jp) >= 2 else []
+    m = re.match(f"^([{KANJI}]{{2,}})([{KATA}]{{2,}})$", jp)
+    if m:
+        words += [m.group(1), m.group(2)]
+    return keyword_pattern(words) if words else None
+
+
+def is_related(own_rec, partner, kw):
+    """自分の枠と相手の枠が、一緒の配信だとタイトルから確認できるか。"""
+    if partner.get("source") != "auto":
+        return True                                   # 手動・指定チャンネルは常に付ける
+    pt, ot = partner["title"], own_rec["title"]       # 末尾の【〜/にじさんじ】に参加者が並ぶこともあるので、タイトル全体を見る
+    if kw and kw.search(pt):
+        return True                                   # 相手のタイトルに自分の名前がある
+    pat = channel_name_pattern(partner.get("channel"))
+    if pat and pat.search(ot):
+        return True                                   # 自分のタイトルに相手の名前がある
+    if same_game(own_rec, partner):
+        return True                                   # 同じゲーム
+    # ゲーム名が違っても、どちらかのタイトルにコラボを示す語があれば付ける
+    return bool(GROUP_RE.search(pt) or GROUP_RE.search(ot) or CUE_RE.search(pt) or CUE_RE.search(ot))
+
+
 # ---------- 統合 ----------
 def span(rec):
     s = parse_time(rec["start"])
@@ -316,6 +379,7 @@ def public(rec, own_name):
 def merge(own, partners, own_name):
     items = {k: dict(v, collabs=[]) for k, v in own.items()}
     min_overlap = timedelta(minutes=CONFIG.get("collab_min_overlap_minutes", 30))
+    kw = keyword_pattern(CONFIG.get("collab_keywords", []))
     for p in sorted(partners.values(), key=lambda r: r["start"]):
         ps, pe = span(p)
         best, best_ov = None, timedelta(0)
@@ -327,6 +391,8 @@ def merge(own, partners, own_name):
             if ov > best_ov:
                 best, best_ov = o, ov
         if best and best_ov >= min(min_overlap, (pe - ps) / 2):
+            if not is_related(best, p, kw):
+                continue                                  # 時間は重なるが、一緒の配信だと確認できない
             best["collabs"].append({"channel": p["channel"], "title": p["title"], "url": p["url"]})
         elif p.get("source") in ("manual", "watch"):
             # 本人の枠がない配信は、手動で登録したものと指定チャンネルのものだけ表示する
