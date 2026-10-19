@@ -1,0 +1,47 @@
+{
+  "channel": "@KoyanagiRou",
+  "name": "小柳ロウ",
+  "name_en": "Koyanagi Rou",
+  "site_title": "koyanagi-log",
+  "since": "2023-01-01T00:00:00",
+  "include_own_videos": false,
+  "game_aliases": {
+    "VALORANT": [
+      "VALORANT",
+      "ヴァロ",
+      "VALO"
+    ],
+    "APEX": [
+      "APEX",
+      "エーペックス"
+    ]
+  },
+  "collab_channels": [
+    "@AkagiWen",
+    "@MurakumoKagetsu",
+    "@HoshirubeSho",
+    "@InamiRai",
+    "@HibachiMana",
+    "@SaikiIttetsu",
+    "@UsamiRito",
+    "@Saotomeberry",
+    "@Kokage_Tsumugi",
+    "@minase9505",
+    "@hayun"
+  ],
+  "collab_keywords": [
+    "小柳ロウ",
+    "Koyanagi Rou",
+    "小柳",
+    "ロウ"
+  ],
+  "collab_min_overlap_minutes": 30,
+  "watch_channels": [
+    {
+      "channel": "UCX7YkU9nEeaoZbkVLVajcMg",
+      "keywords": [
+        "MECHATU-A"
+      ]
+    }
+  ]
+}

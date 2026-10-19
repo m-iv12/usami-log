@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex">
+<title></title>
+<script>document.documentElement.classList.add("theming");setTimeout(function(){document.documentElement.classList.remove("theming")},2500)</script>
+<style>html.theming body{visibility:hidden}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* Layout: 淡いブルーの机に置いたクリップボード。方眼紙のボードにカレンダー、メモ用紙の詳細、マスキングテープの見出し */
+:root{
+  /* 色はすべてここで定義。config.json の theme に同じ名前（-- は省略可）を書くと上書きされる */
+  --desk:#dde5f0; --board:#c8d4e7; --paper:#ffffff; --grid:#e6ecf5; --grid-2:#d6dfee;  /* 外側の背景・カレンダーの板・紙・方眼 */
+  --ink:#3f4d6e; --ink-soft:#66759a; --muted:#8e9bb8;                                  /* 文字 */
+  --main:#7389b5; --main-d:#5a6f9c; --main-l:#a9bde0; --main-xl:#e4ebf6;               /* メインカラー（濃淡4段階） */
+  --memo:#fbf5e2; --memo-d:#e9dcb0;                                                   /* 締切メモ・コラボ印・締切の札 */
+  --clip:#c3c6cd; --clip-d:#a9adb6;                                                   /* クリップ */
+  --sat:#5f7fc4; --sun:#c47a8c;                                                       /* 土曜・日曜 */
+  --ev:#6f85b2; --ev-ink:#ffffff; --ev-deep:#4c5f8a;                                  /* 配信ブロック */
+  --empty:#eef2f8; --empty-num:#b3c0d8;                                               /* 月表示の配信がない日 */
+  --stat2:#8fa4cc;                                                                    /* 集計の2つ目（時間） */
+  /* 半透明で使う色（上の色と同じものを R G B で） */
+  --ink-rgb:63 77 110; --shade-rgb:40 50 75; --main-d-rgb:90 111 156; --main-l-rgb:169 189 224; --main-xl-rgb:228 235 246;
+  --memo-d-rgb:233 220 176; --empty-rgb:238 242 248; --ev-rgb:111 133 178; --ev-deep-rgb:76 95 138;
+  --font-label:"Josefin Sans","Zen Maru Gothic",sans-serif;
+  --font-body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
+  --hh:22px;
+  --grid-bg:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+}
+
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0}
+body{background:var(--desk);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding-block:22px 84px;position:relative;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--main-d);outline-offset:2px}
+
+/* ---- ヘッダー ---- */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:0;line-height:1.1}
+h1{margin:0;font-family:var(--font-body);font-weight:700;font-size:clamp(1.3rem,4.6vw,1.75rem);color:var(--ink);letter-spacing:.06em;line-height:1.35;text-wrap:balance}
+.badge{display:none}
+/* 表示切替＝フォルダのインデックスタブ */
+.seg{display:flex;gap:4px;align-items:flex-end}
+.seg button{border:0;background:var(--main-xl);color:var(--ink-soft);font-family:var(--font-label);font-weight:600;letter-spacing:.12em;
+  padding:8px 18px 6px;border-radius:8px 8px 0 0;box-shadow:inset 0 -2px 0 var(--board)}
+.seg button[aria-selected="true"]{background:var(--main);color:#fff;box-shadow:none;padding-top:11px}
+
+.nav{display:flex;align-items:center;gap:8px}
+.nav h2{font-family:var(--font-label);font-weight:600;font-size:1.25rem;letter-spacing:.06em;margin:0 4px;font-variant-numeric:tabular-nums;flex:1;min-width:0;color:var(--ink)}
+.round{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--main-l);background:var(--paper);color:var(--main-d);font-size:1.1rem;line-height:1;display:grid;place-items:center}
+.round:hover{background:var(--main-xl)}
+.ghost{border:1.5px solid var(--main-l);background:var(--paper);color:var(--main-d);border-radius:99px;padding:5px 16px;font-size:.85rem;font-weight:700}
+
+/* ---- 集計：四角のカード ---- */
+.summary{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.stat{position:relative;width:72px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;color:#fff;background:var(--main);border-radius:4px}
+.stat:nth-child(2){background:var(--stat2)} .stat:nth-child(3){background:var(--main-l);color:var(--ink)} .stat:nth-child(4){background:var(--memo-d);color:var(--ink)}
+.stat small{font-family:var(--font-label);font-size:.6rem;letter-spacing:.14em}
+.stat b{font-family:var(--font-label);font-weight:600;font-size:1.3rem;font-variant-numeric:tabular-nums;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:200px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink);background:var(--paper);border:1px solid var(--grid-2);border-radius:99px;padding:2px 10px 2px 6px;font-variant-numeric:tabular-nums}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 1px rgb(var(--ink-rgb) / .2)}
+.key-co{width:12px;height:12px;background:var(--memo-d);clip-path:polygon(0 0,100% 0,100% 100%);display:inline-block}
+.key-up{width:12px;height:12px;border-radius:3px;display:inline-block;border:1.5px dashed var(--main)}
+.sep{display:none}
+
+/* ---- 締切：マスキングテープ付きのメモ ---- */
+.dl-panel{position:relative;display:flex;flex-direction:column;gap:4px;background:var(--memo);
+  background-image:linear-gradient(rgb(var(--memo-d-rgb) / .45) 1px,transparent 1px),linear-gradient(90deg,rgb(var(--memo-d-rgb) / .45) 1px,transparent 1px);background-size:14px 14px;
+  border-radius:4px;padding:18px 14px 10px;box-shadow:0 2px 6px rgb(var(--ink-rgb) / .12);color:var(--ink);margin-top:6px}
+.dl-panel::before{content:"";position:absolute;left:50%;top:-8px;width:110px;height:18px;transform:translateX(-50%) rotate(-2deg);
+  background:repeating-linear-gradient(90deg,rgb(var(--main-l-rgb) / .85) 0 6px,rgb(var(--main-l-rgb) / .65) 6px 12px);clip-path:polygon(3% 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%,0 0)}
+.dl-h{font-family:var(--font-label);font-size:.72rem;letter-spacing:.2em;color:var(--main-d);font-weight:600;text-align:center}
+.dl-item{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;
+  border:0;border-top:1px dashed var(--memo-d);background:transparent;padding:6px 0 3px;min-width:0}
+.dl-item:first-of-type{border-top:0}
+.dl-left{grid-row:1 / 3;font-family:var(--font-label);font-weight:600;font-size:.85rem;color:#fff;background:var(--main);padding:3px 8px 3px 8px;white-space:nowrap;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);border-radius:3px}
+.dl-title{font-size:.88rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-date{font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.dl-item:hover .dl-title{color:var(--main-d)}
+
+/* ---- ボード（クリップボード＋方眼紙）---- */
+.card{position:relative;background:var(--board);border-radius:14px;padding:26px 8px 8px;margin-top:10px}
+.strap{position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:140px;height:26px;border-radius:5px;
+  background:linear-gradient(var(--clip),var(--clip-d));box-shadow:0 2px 4px rgb(var(--ink-rgb) / .2);z-index:2}
+.strap::before{content:"";position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;
+  border:5px solid var(--clip-d);background:transparent;box-sizing:border-box}
+#view{background:var(--paper);background-image:var(--grid-bg);background-size:16px 16px;border-radius:8px;overflow:hidden}
+
+/* ---- 週 ---- */
+.wk-grid{display:grid;grid-template-columns:30px repeat(7,minmax(0,1fr))}
+.wk-head{background:rgb(255 255 255 / .85);border-bottom:2px solid var(--main-l)}
+.dh{padding:7px 2px 5px;text-align:center;display:flex;flex-direction:column;align-items:center;line-height:1.2;border-left:1px dashed var(--grid-2)}
+.dh .dd{font-family:var(--font-label);font-weight:600;font-size:1.1rem;font-variant-numeric:tabular-nums;color:var(--ink)}
+.dh .dw{font-size:.7rem;color:var(--muted)}
+.dh .dt{font-family:var(--font-label);font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;min-height:1.2em}
+.dh.sat .dw{color:var(--sat)} .dh.sun .dw{color:var(--sun)}
+.dh.today .dd{background:var(--main);color:#fff;border-radius:99px;padding:1px 7px 0}
+.gutter{position:relative;height:calc(24 * var(--hh));background:rgb(255 255 255 / .7)}
+.gutter span{position:absolute;right:5px;font-family:var(--font-label);font-size:.72rem;color:var(--muted);transform:translateY(-50%);font-variant-numeric:tabular-nums}
+.col{position:relative;height:calc(24 * var(--hh));border-left:1px dashed var(--grid-2);
+  background-image:linear-gradient(to bottom,var(--grid-2) 1px,transparent 1px);background-size:100% var(--hh)}
+.col.today{background-color:rgb(var(--main-xl-rgb) / .6)}
+.ev{position:absolute;left:2px;right:2px;border:0;border-radius:6px;padding:4px 3px;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:1px;
+  font-family:var(--font-label);font-size:.74rem;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums;
+  box-shadow:0 1px 2px rgb(var(--ink-rgb) / .18);transition:transform .15s,box-shadow .15s}
+.ev:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgb(var(--ink-rgb) / .22)}
+.ev .g{font-family:var(--font-body);font-weight:700;font-size:.78rem}
+.ev.top-cut{border-top-left-radius:0;border-top-right-radius:0}
+.ev.bot-cut{border-bottom-left-radius:0;border-bottom-right-radius:0}
+@media (min-width:720px){.ev{font-size:.8rem;padding:5px 4px}.ev .g{font-size:.86rem}}
+@media (max-width:480px){.ev{font-size:.58rem;padding:3px 1px;letter-spacing:-.03em}.ev .g{font-size:.62rem;text-overflow:clip}.ev .tm{white-space:normal}}
+@media (prefers-reduced-motion:reduce){.ev{transition:none}.ev:hover{transform:none}}
+/* 予定：点線の枠 */
+.ev.up{background:rgb(255 255 255 / .9);color:var(--ink);box-shadow:inset 0 0 0 2px var(--ev-deep);border:0;
+  background-image:repeating-linear-gradient(-45deg,rgb(var(--main-l-rgb) / .25) 0 4px,transparent 4px 9px)}
+.ev.up{outline:2px dashed var(--ev-deep);outline-offset:-2px;box-shadow:none}
+.ev.live{box-shadow:0 0 0 2px var(--main-d),0 0 10px rgb(var(--main-d-rgb) / .45)}
+/* コラボ：右上の折り返し（生成り） */
+.ev.co::after,.th.co::after{content:"";position:absolute;right:0;top:0;width:12px;height:12px;background:var(--memo-d);
+  clip-path:polygon(0 0,100% 0,100% 100%);z-index:1;box-shadow:-1px 1px 0 rgb(0 0 0 / .1)}
+.th.co::after{width:15px;height:15px}
+.ev .gl{font-family:var(--font-body);font-size:.66rem;border:1px solid currentColor;border-radius:99px;padding:0 5px;margin-top:2px;opacity:.85}
+.ev.guest{outline:1.5px dashed var(--main-d);outline-offset:-3px}
+/* ポスト＝小さな丸、告知＝塗りつぶし */
+.post{position:absolute;right:-2px;width:20px;height:20px;margin-top:-10px;border:0;background:transparent;padding:0;display:grid;place-items:center;z-index:2}
+.post::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--paper);border:2px solid var(--main)}
+.post.ann::after{background:var(--main-d);border-color:var(--paper);box-shadow:0 0 0 1.5px var(--main-d)}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--sun);z-index:3;pointer-events:none}
+.nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--sun)}
+.dl-tag{margin-top:3px;border:0;background:var(--memo-d);color:var(--ink);font-size:.6rem;font-weight:700;padding:1px 6px 1px 5px;line-height:1.4;
+  clip-path:polygon(0 0,100% 0,88% 50%,100% 100%,0 100%)}
+
+/* ---- 月 ---- */
+.mo-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:rgb(255 255 255 / .85);border-bottom:2px solid var(--main-l)}
+.mo-head span{text-align:center;font-family:var(--font-label);font-weight:600;letter-spacing:.14em;font-size:.8rem;color:var(--ink-soft);padding:7px 0 5px}
+.mo-head .sat{color:var(--sat)} .mo-head .sun{color:var(--sun)}
+.mo-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;padding:3px}
+.mc{position:relative;border:0;padding:0;aspect-ratio:1;max-width:100%;min-width:0;overflow:hidden;border-radius:6px;
+  background:rgb(var(--empty-rgb) / .85);display:flex;flex-direction:column;gap:2px}
+.mc.out{visibility:hidden}
+.mc:hover .th{filter:brightness(1.06)}
+.th{position:relative;flex:1;min-height:0;overflow:hidden;transition:filter .15s}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+.ph b{position:relative;font-family:var(--font-body);font-weight:700;font-size:clamp(.55rem,2.4vw,1rem);opacity:.85;color:var(--ev-ink)}
+.mn{position:absolute;right:5px;bottom:1px;z-index:2;font-family:var(--font-label);font-weight:600;font-size:clamp(1rem,4.6vw,2rem);line-height:1.05;
+  font-variant-numeric:tabular-nums;color:var(--empty-num);pointer-events:none}
+.mc.has .mn{color:#fff;text-shadow:0 0 3px rgb(var(--shade-rgb) / .7),0 1px 4px rgb(var(--shade-rgb) / .5)}
+.mc.today{outline:3px solid var(--main);outline-offset:-3px}
+.mh{position:absolute;left:4px;top:4px;z-index:2;font-family:var(--font-label);font-size:.72rem;font-weight:600;color:var(--ink);background:rgb(255 255 255 / .88);
+  border-radius:99px;padding:1px 7px 0;font-variant-numeric:tabular-nums;pointer-events:none}
+@media (max-width:480px){.mh{display:none}}
+.th.up::before{content:"";position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(-45deg,rgb(255 255 255 / .55) 0 4px,transparent 4px 10px)}
+.upl{position:absolute;left:3px;top:3px;z-index:2;font-size:.6rem;font-weight:700;background:var(--paper);color:var(--main-d);border:1px dashed var(--main);border-radius:99px;padding:0 5px;line-height:1.5}
+@media (max-width:480px){.upl{font-size:.5rem;padding:0 3px}}
+.dl-badge{position:absolute;left:3px;bottom:3px;z-index:2;font-size:.58rem;font-weight:700;color:var(--ink);background:var(--memo-d);padding:0 7px 0 4px;line-height:1.6;
+  clip-path:polygon(0 0,100% 0,85% 50%,100% 100%,0 100%);pointer-events:none}
+@media (max-width:480px){.dl-badge{font-size:.5rem}}
+
+/* ---- ブロック内：時刻／ゲーム(時間)／タイトル ---- */
+.ev .tm{white-space:nowrap}
+.ev .g small{font-size:.86em;font-weight:600;margin-left:1px}
+.sh-thumb{display:block;margin:0 -2px;border-radius:6px;overflow:hidden;aspect-ratio:16 / 9;background:var(--main-xl);box-shadow:0 2px 6px rgb(var(--ink-rgb) / .2)}
+.sh-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+/* ---- 週表示のサムネイルとタイトル ---- */
+.evth{display:block;flex:none;width:calc(100% + 6px);margin:-4px -3px 3px;aspect-ratio:16 / 9;overflow:hidden;background:rgb(255 255 255 / .3)}
+.evth img{display:block;width:100%;height:100%;object-fit:cover}
+.ev .tt{display:block;flex:1 1 auto;min-height:0;width:100%;margin-top:3px;padding-top:3px;border-top:1px dashed currentColor;
+  font-family:var(--font-body);font-weight:500;font-size:.64rem;line-height:1.4;text-align:left;overflow:hidden;overflow-wrap:anywhere;
+  -webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+.ev.up .tt{border-top-color:var(--main-l)}
+@media (min-width:720px){.evth{width:calc(100% + 8px);margin:-5px -4px 4px}.ev .tt{font-size:.74rem}}
+@media (max-width:480px){.evth{width:calc(100% + 2px);margin:-3px -1px 2px}.ev .tt{font-size:.56rem;line-height:1.35;letter-spacing:0}}
+/* ---- 配信ブロックの色（ゲームによらず共通）---- */
+.gx{background:var(--ev);color:var(--ev-ink)}
+.ph.gx{background:linear-gradient(135deg,var(--ev) 0%,var(--ev-deep) 100%)}
+.ev .g{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph b{max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.note{font-size:.8rem;color:var(--ink-soft);margin:0;max-width:65ch;line-height:1.75}
+
+/* ---- 詳細：クリップ留めのメモ ---- */
+.backdrop{position:fixed;inset:0;background:rgb(var(--ink-rgb) / .35);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;display:flex;justify-content:center;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.sheet-in{position:relative;width:100%;max-width:440px;max-height:calc(100vh - 40px);overflow-y:auto;
+  background:var(--memo);background-image:linear-gradient(rgb(var(--memo-d-rgb) / .5) 1px,transparent 1px),linear-gradient(90deg,rgb(var(--memo-d-rgb) / .5) 1px,transparent 1px);background-size:14px 14px;
+  border:6px solid var(--main-xl);border-radius:6px;padding:20px 20px 20px;display:flex;flex-direction:column;gap:10px;
+  box-shadow:0 14px 40px rgb(var(--shade-rgb) / .3);animation:up .2s ease-out;color:var(--ink)}
+@keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet-in{animation:none}}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tag{font-size:.78rem;font-weight:700;padding:2px 12px;border-radius:99px}
+.tag.st{background:var(--paper);color:var(--main-d);border:1px dashed var(--main)}
+.tag.post-tag{background:var(--main);color:#fff}
+.tag.dl{background:var(--memo-d);color:var(--ink);border-radius:0;clip-path:polygon(0 0,100% 0,92% 50%,100% 100%,0 100%);padding-right:16px}
+.sheet h3{margin:0;font-size:1.05rem;line-height:1.5;text-wrap:balance;color:var(--ink)}
+.sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.9rem;border-top:1px dashed var(--memo-d);padding-top:10px}
+.sheet dt{color:var(--ink-soft)} .sheet dd{margin:0;font-variant-numeric:tabular-nums}
+.warn{margin-left:8px;font-size:.72rem;color:var(--main-d);border:1px solid var(--main-l);border-radius:99px;padding:0 6px}
+.open{display:flex;justify-content:center;align-items:center;gap:8px;background:var(--main);color:#fff;
+  text-decoration:none;font-weight:700;border-radius:99px;padding:11px;margin-top:4px;box-shadow:0 2px 0 var(--main-d)}
+.open:hover{background:var(--main-d)}
+.sheet .hint{font-size:.72rem;color:var(--ink-soft);margin:0;text-align:center}
+.ex-h{margin:4px 0 0;font-family:var(--font-label);font-size:.72rem;letter-spacing:.16em;color:var(--main-d);font-weight:600;display:flex;align-items:center;gap:8px}
+.ex-h::after{content:"";flex:1;border-top:1px dashed var(--memo-d)}
+.cl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cl a{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-decoration:none;color:var(--ink);
+  background:var(--paper);border:1px solid var(--grid-2);border-radius:8px;padding:7px 12px}
+.cl a:hover{border-color:var(--main)}
+.cl b{font-size:.88rem;min-width:0}
+.cl span{grid-row:2;font-size:.75rem;color:var(--ink-soft);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl i{grid-row:1 / 3;grid-column:2;font-style:normal;color:var(--main)}
+
+/* ---- 追加ボタン（吊り下げタグ）とフォーム ---- */
+.fab{position:fixed;z-index:15;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;gap:8px;border:0;background:var(--main);color:#fff;font-weight:700;letter-spacing:.08em;
+  padding:11px 20px 11px 26px;clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%);border-radius:0 8px 8px 0;
+  filter:drop-shadow(0 4px 8px rgb(var(--shade-rgb) / .3))}
+.fab::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--desk);margin-left:-6px}
+.fab:hover{background:var(--main-d)}
+.form{display:flex;flex-direction:column;gap:12px}
+#add-title{font-family:var(--font-body)}
+.types{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.types label{position:relative;text-align:center;font-size:.8rem;font-weight:700;color:var(--ink-soft);padding:7px 2px;border-radius:8px;cursor:pointer;background:var(--paper);border:1px solid var(--grid-2)}
+.types input{position:absolute;opacity:0;pointer-events:none}
+.types label:has(input:checked){background:var(--main);color:#fff;border-color:var(--main)}
+.types label:has(input:focus-visible){outline:2px solid var(--main-d)}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span{font-size:.78rem;color:var(--ink-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form input[type=url],.form input[type=text],.form input[type=date],.form input[type=time],.form select{
+  width:100%;min-width:0;font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid var(--grid-2);border-radius:8px;padding:8px 10px}
+.form input:focus,.form select:focus{outline:2px solid var(--main);outline-offset:0;border-color:transparent}
+.chk{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.chk input{width:18px;height:18px;accent-color:var(--main)}
+.help{margin:0;font-size:.76rem;color:var(--ink-soft);line-height:1.6}
+.preview{margin:0;font-size:.82rem;color:var(--main-d);min-height:1.3em}
+.err{margin:0;font-size:.82rem;color:#b5475d;min-height:0}
+.submit{border:0;background:var(--main);color:#fff;font-weight:700;border-radius:99px;padding:11px;box-shadow:0 2px 0 var(--main-d)}
+.submit:hover{background:var(--main-d)}
+.done{margin:0;font-size:.82rem;background:var(--paper);border:1px dashed var(--main);border-radius:8px;padding:8px 10px;line-height:1.6;word-break:break-all;white-space:pre-line}
+[hidden]{display:none!important}
+
+/* ---- 凡例 ---- */
+.note{font-size:.76rem;color:var(--ink-soft);margin:0;line-height:1.5;max-width:none}
+.note-h{margin:0 0 4px;font-family:var(--font-label);font-size:.68rem;font-weight:600;letter-spacing:.16em;color:var(--main-d);border-bottom:1px dashed var(--grid-2);padding-bottom:2px}
+.note ul{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 12px}
+.note li{display:flex;align-items:center;gap:5px}
+.note .note-data{flex-direction:column;gap:2px}
+.note .note-data li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--main-l);flex:none}
+.k{width:12px;height:12px;flex:none;display:inline-block}
+.k-post{border-radius:50%;background:var(--paper);border:2px solid var(--main);width:10px;height:10px}
+.k-ann{border-radius:50%;background:var(--main-d);width:10px;height:10px}
+.k-dl{width:16px;background:var(--memo-d);clip-path:polygon(0 0,100% 0,80% 50%,100% 100%,0 100%)}
+
+/* ---- 時刻の札（カード左上にはみ出す）---- */
+.ev{overflow:visible;padding:0}
+.evin{position:absolute;inset:0;overflow:hidden;border-radius:inherit;display:flex;flex-direction:column;align-items:center;padding:10px 3px 3px;gap:1px}
+.evin>*{flex:none}
+.evin .tt{flex:1 1 auto}
+.evin .evth{margin:-10px -3px 3px;width:calc(100% + 6px)}
+.pill{position:absolute;top:-8px;left:-5px;z-index:4;background:var(--paper);color:var(--main-d);border:1.5px solid var(--main);border-radius:99px;
+  font-family:var(--font-label);font-weight:600;font-size:.66rem;line-height:1.35;padding:1px 6px 0;white-space:nowrap;
+  box-shadow:0 1px 3px rgb(var(--ink-rgb) / .25);pointer-events:none;font-variant-numeric:tabular-nums}
+.ev.up .pill{border-style:dashed}
+.ev.live .pill{background:var(--main-d);color:#fff;border-color:var(--main-d)}
+.ev .g{line-height:1.3}
+.dh{line-height:1.15}
+@media (min-width:720px){.evin{padding:10px 4px 4px}.evin .evth{margin:-10px -4px 4px;width:calc(100% + 8px)}.pill{font-size:.72rem}}
+@media (max-width:480px){.evin{padding:10px 1px 2px}.evin .evth{margin:-10px -1px 2px;width:calc(100% + 2px)}.pill{font-size:.56rem;padding:0 3px;left:-3px;top:-7px}}
+
+/* ---- サムネイルの背景（うっすら）---- */
+.evin.hasth{background:linear-gradient(rgb(var(--ev-rgb) / .3),rgb(var(--ev-deep-rgb) / .6)),var(--th) center / cover no-repeat}
+.evin.hasth .g,.evin.hasth .tt{text-shadow:0 1px 2px rgb(var(--shade-rgb) / .45)}
+
+/* ---- 週表示の罫線：1時間ごとの線＋30分ごとの薄い線（方眼紙は月表示のみ）---- */
+#view.v-week{background-image:none;background-color:var(--paper)}
+#view.v-week .gutter{background:var(--paper)}
+#view.v-week .col{background-image:linear-gradient(to bottom,var(--grid-2) 1px,transparent 1px),linear-gradient(to bottom,var(--grid) 1px,transparent 1px);
+  background-size:100% var(--hh),100% var(--hh);background-position:0 0,0 calc(var(--hh) / 2)}
+/* 1時間の間隔が狭いときは30分の線を出さない */
+#view.v-week.dense .col{background-image:linear-gradient(to bottom,var(--grid-2) 1px,transparent 1px);background-size:100% var(--hh);background-position:0 0}
+
+/* ---- ゲーム別一覧 ---- */
+button.chip{font:inherit;font-size:.8rem;cursor:pointer}
+button.chip:hover{border-color:var(--main);color:var(--main-d)}
+.chip.on,.chip.on:hover{background:var(--main);border-color:var(--main);color:#fff}
+#back{display:none}
+body.mode-list #back{display:inline-block}
+body.mode-list #prev,body.mode-list #next,body.mode-list #today{display:none}
+.list{display:flex;flex-direction:column;gap:6px;padding:4px 10px 14px}
+.list-ym{position:sticky;top:0;z-index:2;margin:6px -10px 0;padding:6px 12px;background:rgb(255 255 255 / .94);border-bottom:2px solid var(--main-l);
+  font-family:var(--font-label);font-size:.82rem;font-weight:600;letter-spacing:.08em;color:var(--main-d)}
+.li{display:grid;grid-template-columns:128px minmax(0,1fr);gap:12px;align-items:center;text-align:left;width:100%;
+  background:var(--paper);border:1px solid var(--grid-2);border-radius:8px;padding:6px;color:var(--ink)}
+.li:hover{border-color:var(--main);box-shadow:0 2px 8px rgb(var(--ink-rgb) / .12)}
+.li.up{border-style:dashed;border-color:var(--main)}
+.li-th{display:block;aspect-ratio:16 / 9;border-radius:5px;overflow:hidden;background:var(--main-xl)}
+.li-th img{display:block;width:100%;height:100%;object-fit:cover}
+.li-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.li-date{font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.li-title{font-size:.9rem;font-weight:700;line-height:1.45;overflow-wrap:anywhere}
+.li-ch{font-size:.7rem;color:var(--main-d)}
+.list-empty{margin:20px;color:var(--ink-soft)}
+@media (max-width:480px){.li{grid-template-columns:96px minmax(0,1fr);gap:8px}.li-title{font-size:.8rem}}
+/* 見出し：PCは2行（小柳ロウ／配信スケジュール）、スマホは1行 */
+h1 .br::before{content:"　"}
+@media (min-width:900px){h1 .br{display:block}h1 .br::before{content:none}}
+.evin.next{padding-top:4px}
+.ev .tt.solo{margin-top:0;padding-top:0;border-top:0}
+.round{padding:0}
+.round .ico{width:16px;height:16px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- コラボ相手の枠：除外オプション ---- */
+.ex-h span{flex:none}
+.ex-h::after{order:1}
+.ex-opt{order:2;flex:none;border:1px solid var(--grid-2);background:var(--paper);color:var(--ink-soft);border-radius:99px;font-size:.68rem;letter-spacing:0;padding:1px 9px;font-family:var(--font-body)}
+.ex-opt[aria-expanded="true"]{border-color:var(--main);color:var(--main-d)}
+.cl li{display:flex;gap:6px;align-items:stretch}
+.cl li a{flex:1;min-width:0}
+.ex-del{flex:none;border:1px solid #d9b3bc;background:var(--paper);color:#a3435a;border-radius:8px;font-size:.74rem;font-weight:700;padding:0 10px;white-space:nowrap}
+.ex-del.armed{background:#a3435a;color:#fff;border-color:#a3435a}
+.ex-del:disabled{opacity:.7;cursor:default}
+.ex-self{display:flex}
+.ex-self .ex-del{padding:7px 12px}
+/* ---- 詳細パネル：画面内に収めてスクロール（枠線・余白込みで高さを計算）---- */
+.sheet-in{box-sizing:border-box;max-height:calc(100vh - 24px - env(safe-area-inset-bottom,0px));max-height:calc(100dvh - 24px - env(safe-area-inset-bottom,0px));
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet-top{position:sticky;top:-20px;z-index:3;margin:-20px -20px 0;padding:14px 20px 10px;background:var(--memo);
+  background-image:linear-gradient(rgb(var(--memo-d-rgb) / .5) 1px,transparent 1px),linear-gradient(90deg,rgb(var(--memo-d-rgb) / .5) 1px,transparent 1px);background-size:14px 14px}
+.sheet-in>*{flex-shrink:0}
+
+/* ---- 年月を選ぶパネル ---- */
+.nav{position:relative}
+.label-btn{border:0;background:transparent;padding:2px 22px 2px 6px;margin:-2px -6px;border-radius:8px;text-align:left;font:inherit;color:inherit;position:relative;cursor:pointer}
+.label-btn::after{content:"";position:absolute;right:6px;bottom:9px;width:7px;height:7px;border-right:2px solid var(--main);border-bottom:2px solid var(--main);transform:rotate(45deg)}
+.label-btn:hover{background:var(--main-xl)}
+.label-btn[aria-expanded="true"]::after{transform:rotate(-135deg);bottom:5px}
+body.mode-list .label-btn{pointer-events:none;padding-right:6px}
+body.mode-list .label-btn::after{display:none}
+.picker{position:fixed;left:16px;top:120px;z-index:25;width:min(300px,calc(100vw - 32px));background:var(--paper);border:1px solid var(--grid-2);
+  border-radius:12px;padding:12px;box-shadow:0 10px 30px rgb(var(--shade-rgb) / .25);display:flex;flex-direction:column;gap:10px}
+.pk-head{display:flex;align-items:center;justify-content:space-between}
+.pk-head b{font-family:var(--font-label);font-size:1.15rem;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.pk-head .round:disabled{opacity:.3;cursor:default}
+.pk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pk-m{display:flex;flex-direction:column;align-items:center;gap:1px;border:1px solid var(--grid-2);background:var(--empty);color:var(--muted);border-radius:8px;padding:7px 2px}
+.pk-m b{font-size:.9rem}
+.pk-m small{font-family:var(--font-label);font-size:.68rem;font-variant-numeric:tabular-nums}
+.pk-m.has{background:var(--main-xl);color:var(--ink);border-color:var(--main-l)}
+.pk-m.now{box-shadow:inset 0 0 0 2px var(--sun)}
+.pk-m.cur{background:var(--main);color:#fff;border-color:var(--main)}
+.pk-m:hover{border-color:var(--main)}
+.note-foot{margin:0;font-size:.68rem;color:var(--muted)}
+/* ==== 1画面レイアウト（スマホ：上に操作／PC：左パネル＋右カレンダー）==== */
+html,body{height:100%}
+.wrap{box-sizing:border-box;height:100vh;height:100dvh;max-width:1400px;padding-block:10px;gap:8px;display:flex;flex-direction:column;overflow:hidden}
+.side{display:flex;flex-direction:column;gap:8px;flex:none;min-width:0}
+.top{align-items:center;flex-wrap:nowrap}
+h1{font-size:1rem;letter-spacing:.02em;white-space:nowrap}
+.card,#view,.side{box-sizing:border-box}
+.seg button{padding:6px 14px 4px}
+.seg button[aria-selected="true"]{padding-top:8px}
+.nav h2{font-size:1.05rem;line-height:1.15}
+.nav h2 small{display:block;font-size:.62rem;color:var(--ink-soft);letter-spacing:.1em;font-weight:600}
+.round{width:32px;height:32px}
+.ghost{padding:4px 12px}
+/* 集計：スマホは横一列のコンパクト表示 */
+.summary{flex-wrap:nowrap;overflow-x:auto;gap:6px;scrollbar-width:none;padding-bottom:1px}
+.summary::-webkit-scrollbar{display:none}
+.stat{flex:none;flex-direction:row;align-items:baseline;gap:3px;width:auto;height:auto;padding:4px 9px;border-radius:4px}
+.stat small:first-child{display:none}
+.stat b{font-size:1rem;margin:0}
+.chips{flex-wrap:nowrap;min-width:auto;flex:none}
+.chip{white-space:nowrap}
+/* 締切：スマホは一番近い1件だけ */
+.dl-panel{padding:8px 12px 6px;margin-top:4px}
+.dl-panel::before{width:70px;height:12px;top:-6px}
+.dl-h{display:none}
+.dl-item:not(:first-of-type){display:none}
+.dl-item{padding:0}
+.note{display:none}
+/* カレンダー：残りの高さいっぱい */
+.card{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:12px;padding:20px 6px 6px}
+#view{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.wk-head{flex:none;height:var(--wkh,50px);overflow:hidden}
+.dh{position:relative;padding:5px 2px 3px}
+.dl-tag{position:absolute;top:2px;right:1px;margin:0}
+.mo-head{flex:none}
+.mo-grid{flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}
+.mc{aspect-ratio:auto}
+
+/* スマホ：ステータスバー・ホームバーの分だけ上下に余白。下の帯に凡例を置き、追加ボタンがある端末はその右に並べる */
+@media (max-width:899px){
+  .wrap{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+  .side .note{display:flex;align-items:center;gap:8px;position:fixed;z-index:5;
+    left:calc(16px + env(safe-area-inset-left,0px));right:calc(16px + env(safe-area-inset-right,0px));
+    bottom:calc(10px + env(safe-area-inset-bottom,0px));height:38px;font-size:.7rem;line-height:1.3}
+  body.edit .side .note{right:calc(112px + env(safe-area-inset-right,0px))}
+  .side .note .note-h{display:none}
+  .side .note ul{margin:0;gap:4px 12px;align-content:center}
+  .side .note li{gap:4px;white-space:nowrap}
+  .fab{bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:9px 16px 9px 22px}
+}
+@media (min-width:900px){
+  .wrap{display:grid;grid-template-columns:280px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:24px;padding-block:18px}
+  .side{overflow-y:auto;gap:14px;padding:4px 4px 8px 0;scrollbar-width:thin}
+  .top{flex-direction:column;align-items:flex-start;gap:12px}
+  h1{font-size:1.4rem;line-height:1.35;white-space:nowrap}
+  .seg{width:100%}
+  .seg button{flex:1}
+  .nav h2{font-size:1.2rem}
+  .summary{flex-wrap:wrap;overflow:visible;gap:8px}
+  .stat{flex-direction:column;align-items:center;justify-content:center;width:76px;height:66px;padding:0;gap:0}
+  .stat small:first-child{display:block}
+  .stat b{font-size:1.3rem;margin-top:2px}
+  .chips{flex-wrap:wrap;flex:1 1 100%}
+  .dl-panel{padding:18px 14px 10px;margin-top:8px}
+  .dl-panel::before{width:110px;height:18px;top:-8px}
+  .dl-h{display:block}
+  .dl-item:not(:first-of-type){display:grid}
+  .dl-item{padding:6px 0 3px}
+  .note{display:block}
+  .card{margin-top:14px;padding:26px 8px 8px}
+}
+
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <aside class="side">
+  <header class="top">
+    <div class="brand"><h1><span class="own-name"></span><span class="br"></span>配信スケジュール</h1><span class="badge">Sample</span></div>
+    <div class="seg" role="tablist" aria-label="表示切り替え">
+      <button id="v-week" role="tab">週</button><button id="v-month" role="tab">月</button>
+    </div>
+  </header>
+  <div class="nav">
+    <button class="round" id="prev" aria-label="前へ"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></button>
+    <h2><button type="button" id="label" class="label-btn" aria-haspopup="dialog" aria-expanded="false" title="年月を選ぶ"></button></h2>
+    <div id="picker" class="picker" hidden role="dialog" aria-label="年月を選ぶ">
+      <div class="pk-head"><button type="button" class="round" id="pk-prev" aria-label="前の年"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></button><b id="pk-year"></b><button type="button" class="round" id="pk-next" aria-label="次の年"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></button></div>
+      <div class="pk-grid" id="pk-grid"></div>
+    </div>
+    <button class="ghost" id="today">今日</button>
+    <button class="ghost" id="back">← 戻る</button>
+    <button class="round" id="next" aria-label="次へ"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></button>
+  </div>
+  <div class="summary" id="summary"></div>
+  <div class="dl-panel" id="deadlines" hidden></div>
+  <div class="note">
+      <p class="note-h">凡例</p>
+      <ul>
+        <li><span class="k k-post"></span>ポスト</li>
+        <li><span class="k k-ann"></span>配信告知</li>
+        <li><span class="k key-co"></span>コラボ</li>
+        <li><span class="k key-up"></span>配信予定</li>
+        <li><span class="k k-dl"></span>締切</li>
+      </ul>
+    </div>
+  </aside>
+  <main class="card"><div class="strap" aria-hidden="true"></div><div id="view"></div></main>
+</div>
+
+<div id="backdrop" class="backdrop" hidden></div>
+<div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sh-title">
+  <div class="sheet-in">
+    <div class="sheet-top"><div class="sheet-tags"><span id="sh-tag" class="tag"></span><span id="sh-status" class="tag st" hidden></span></div><button class="round" id="sh-close" aria-label="閉じる"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+    <a id="sh-thumb" class="sh-thumb" target="_blank" rel="noopener" hidden><img alt=""></a>
+    <h3 id="sh-title"></h3>
+    <dl id="sh-dl"></dl>
+    <a id="sh-link" class="open" target="_blank" rel="noopener"></a>
+    <div id="sh-extra"></div>
+      </div>
+</div>
+
+<button class="fab" id="add-open" type="button" hidden>追加</button>
+<div id="add-sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="add-title">
+  <div class="sheet-in">
+    <div class="sheet-top"><h3 id="add-title" style="margin:0">予定・配信を追加</h3><button class="round" id="add-close" type="button" aria-label="閉じる"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+    <form class="form" id="add-form" novalidate>
+      <div class="types" role="radiogroup" aria-label="追加する種類">
+        <label><input type="radio" name="ftype" id="t-collab" value="collab" checked>他枠の配信</label>
+        <label><input type="radio" name="ftype" id="t-schedule" value="schedule">配信予定</label>
+        <label><input type="radio" name="ftype" id="t-post" value="post">ポスト</label>
+        <label><input type="radio" name="ftype" id="t-deadline" value="deadline">締切</label>
+      </div>
+      <div class="fgroup" data-type="collab">
+        <label class="fld"><span>YouTube の URL（配信・動画）</span><input type="url" id="f-yt" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off"></label>
+        <p class="help">時刻・サムネイル・チャンネル名は自動で取得します。同じ時間に<span class="own-name"></span>の配信があれば「コラボ相手の枠」として付き、なければ「本人の枠なし」として表示されます。</p>
+      </div>
+      <div class="fgroup" data-type="schedule" hidden>
+        <div class="row2">
+          <label class="fld"><span>日付</span><input type="date" id="f-date"></label>
+          <label class="fld"><span>開始時刻</span><input type="time" id="f-time"></label>
+        </div>
+        <label class="fld"><span>タイトル</span><input type="text" id="f-title" placeholder="大会本番 など"></label>
+        <div class="row2">
+          <label class="fld"><span>ゲーム（【】の中身）</span><input type="text" id="f-game" list="f-games" placeholder="VALORANT など"><datalist id="f-games"><option value="VALORANT"><option value="APEX"><option value="雑談"></datalist></label>
+          <label class="fld"><span>配信元</span><select id="f-own"><option value="own">本人の枠</option><option value="guest">他の人の枠</option></select></label>
+        </div>
+        <label class="fld"><span>告知ポストの URL（任意）</span><input type="url" id="f-surl" placeholder="https://x.com/…/status/…" autocomplete="off"></label>
+        <p class="help">YouTube に枠が立つと、自動でそちらに置き換わります。</p>
+      </div>
+      <div class="fgroup" data-type="post" hidden>
+        <label class="fld"><span>X のポストの URL</span><input type="url" id="f-x" placeholder="https://x.com/…/status/…" autocomplete="off"></label>
+        <p class="preview" id="f-xtime" aria-live="polite"></p>
+        <label class="chk"><input type="checkbox" id="f-ann">配信告知のポスト</label>
+        <p class="help">投稿時刻は URL から自動で読み取ります。</p>
+      </div>
+      <div class="fgroup" data-type="deadline" hidden>
+        <label class="fld"><span>内容</span><input type="text" id="f-dtitle" placeholder="〇〇グッズ 受注締切 など"></label>
+        <div class="row2">
+          <label class="fld"><span>締切日</span><input type="date" id="f-ddate"></label>
+          <label class="fld"><span>締切時刻</span><input type="time" id="f-dtime" value="23:59"></label>
+        </div>
+        <label class="fld"><span>告知ポストか販売ページの URL</span><input type="url" id="f-durl" placeholder="https://x.com/…/status/…" autocomplete="off"></label>
+        <p class="help">カレンダーの上の「締切が近いもの」と、該当日に「締切」の印で表示されます。</p>
+      </div>
+      <p class="err" id="f-err" role="alert"></p>
+      <button class="submit" type="submit">GitHub で登録する</button>
+      <p class="help" id="f-note">GitHub の画面が開くので、「Create」（Submit new issue）を押すと登録されます。カレンダーへの反映まで数分かかります。</p>
+      <p class="done" id="f-done" hidden></p>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+const H=3600e3, DAYMS=864e5;
+let OWN="", TAIL_RE=/\s*【[^】]*にじさんじ[^】]*】\s*$/i;
+// ゲーム名＝タイトル先頭の【】の中身。ブロック内では長い名前だけ短く表示する
+const SHORT={"VALORANT":"VALO","その他":"他"};
+const gShort=g=>SHORT[g]||g;
+const gameOf=t=>{const m=String(t||"").match(/【([^】]+)】/);return m?m[1].trim():"その他"};
+const normGame=g=>{if(!g)return"その他";g=String(g).trim();const u=g.toUpperCase();
+  if(u.includes("VALORANT")||u==="VALO"||g.includes("ヴァロ"))return"VALORANT";if(u.includes("APEX")||g.includes("エーペックス"))return"APEX";return g};
+// 表示用タイトル：先頭のゲーム名【】と、末尾の【名前/にじさんじ】などを外す（名前は config.json から）
+const cleanTitle=t=>String(t||"").replace(/^\s*【[^】]*】\s*/,"").replace(TAIL_RE,"").trim()||String(t||"");
+const WD=["日","月","火","水","木","金","土"];
+const sod=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+const addDays=(t,n)=>{const d=new Date(t);d.setDate(d.getDate()+n);return d.getTime()};
+const sow=t=>{const s=sod(t);return addDays(s,-((new Date(s).getDay()+6)%7))};
+
+// ---- ライバー名・ページ名は config.json の name / name_en / site_title から ----
+function applyConfig(cfg){
+  cfg=cfg&&!Array.isArray(cfg)?cfg:{};
+  OWN=cfg.name||"";
+  const root=document.documentElement;
+  Object.entries(cfg.theme||{}).forEach(([k,v])=>root.style.setProperty(k.startsWith("--")?k:"--"+k,v));
+  root.classList.remove("theming");
+  const site=cfg.site_title||"stream-log";
+  document.title=site;
+  document.querySelector('meta[name="apple-mobile-web-app-title"]').content=site;
+  document.querySelectorAll(".own-name").forEach(el=>el.textContent=OWN);
+  const esc=x=>String(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  const words=[OWN,cfg.name_en,...(cfg.collab_keywords||[]),"にじさんじ"].filter(Boolean).map(esc);
+  TAIL_RE=new RegExp("\\s*【[^】]*("+words.join("|")+")[^】]*】\\s*$","i");
+}
+
+// ---- *.json を読み込む ----
+async function getData(){
+  const get=async p=>{try{const r=await fetch(p,{cache:"no-cache"});return r.ok?await r.json():[]}catch(e){return[]}};
+  const [streams,posts,deadlines,cfg]=await Promise.all([get("streams.json"),get("posts.json"),get("deadlines.json"),get("config.json")]);
+  applyConfig(cfg);
+  return {streams,posts,deadlines};
+}
+
+let events=[],streams=[],posts=[],deadlines=[];
+const T=v=>typeof v==="number"?v:Date.parse(v);
+function normalize(d){
+  const now=Date.now();
+  streams=d.streams.filter(x=>x.start).map((x,i)=>{
+    const s=T(x.start),status=x.status||"done";
+    let e=x.end?T(x.end):null,est=false;
+    if(!e){if(status==="live")e=Math.max(now,s+30*6e4);else{e=s+2*H;est=true}}
+    return{id:"s"+i,kind:"stream",vkind:x.kind||"stream",status,est,own:x.own!==false,channel:x.channel||OWN,manual:!!x.manual,
+      game:normGame(x.game||gameOf(x.title)),title:x.title||"",start:s,end:e,url:x.url||"https://www.youtube.com/",thumb:x.thumb||null,collabs:x.collabs||[]};
+  });
+  posts=(d.posts||[]).filter(x=>x.time).map((x,i)=>({id:"p"+i,kind:"post",ann:x.kind==="announce",time:T(x.time),
+    text:x.text||(x.kind==="announce"?"配信告知":"ポスト"),url:x.url||"https://x.com/"}));
+  deadlines=(d.deadlines||[]).filter(x=>x.deadline).map((x,i)=>({id:"d"+i,kind:"deadline",title:x.title||"締切",time:T(x.deadline),url:x.url||"https://x.com/"}));
+  events=streams.concat(posts,deadlines);
+}
+
+// ---- helpers ----
+const hm=t=>{const d=new Date(t);return d.getHours()+":"+String(d.getMinutes()).padStart(2,"0")};
+const endLabel=(s,e)=>{const d=new Date(e);if(sod(e)!==sod(s)){if(d.getHours()===0&&d.getMinutes()===0&&sod(e)===addDays(sod(s),1))return"24:00";return"翌"+hm(e)}return hm(e)};
+const hrs=ms=>{const h=Math.round(ms/H*2)/2;return(h%1?h.toFixed(1):h)};
+const md=t=>{const d=new Date(t);return`${d.getMonth()+1}/${d.getDate()}（${WD[d.getDay()]}）`};
+const overlap=(s,e,a,b)=>Math.max(0,Math.min(e,b)-Math.max(s,a));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const isUp=x=>x.status==="upcoming";
+
+// ---- state ----
+let view="week",cursor=Date.now();
+try{const v=localStorage.getItem("rou-view");if(v==="week"||v==="month")view=v}catch(e){}
+if(location.hash==="#month")view="month";if(location.hash==="#week")view="week";
+const $=id=>document.getElementById(id);
+
+function summary(a,b){
+  const all=streams.filter(e=>e.end>a&&e.start<b),ss=all.filter(x=>!isUp(x)),up=all.length-ss.length;
+  const per={};let tot=0;
+  ss.forEach(e=>{const o=overlap(e.start,e.end,a,b);per[e.game]=(per[e.game]||0)+o;tot+=o});
+  const ranked=Object.entries(per).sort((x,y)=>y[1]-x[1]),top=ranked.slice(0,5),rest=ranked.slice(5).reduce((s,x)=>s+x[1],0);
+  const pc=posts.filter(p=>p.time>=a&&p.time<b).length;
+  $("summary").innerHTML=`<span class="stat"><small>STREAM</small><b>${ss.length}</b><small>回</small></span><span class="stat"><small>HOURS</small><b>${hrs(tot)}</b><small>時間</small></span><span class="stat"><small>POST</small><b>${pc}</b><small>件</small></span>${up?`<span class="stat"><small>PLAN</small><b>${up}</b><small>予定</small></span>`:""}`+
+    `<span class="chips">`+top.map(([g,v])=>`<button class="chip" data-game="${esc(g)}" title="${esc(g)} の配信一覧">${esc(g)} ${hrs(v)}h</button>`).join("")+(rest?`<span class="chip">ほか ${hrs(rest)}h</span>`:"")+
+    `</span>`;
+}
+
+// ---- ゲーム別一覧 ----
+let listGame=null;
+const ymd=t=>{const d=new Date(t);return`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}（${WD[d.getDay()]}）`};
+function renderList(){
+  const g=listGame,items=streams.filter(x=>x.game===g).sort((a,b)=>b.start-a.start);
+  const done=items.filter(x=>!isUp(x)),tot=done.reduce((s,x)=>s+(x.end-x.start),0);
+  $("label").innerHTML=`<small>ゲーム別一覧</small>${esc(g)}`;
+  // 集計：このゲームの通算／ゲーム名は全期間の順位（押すと切り替え）
+  const per={};streams.filter(x=>!isUp(x)).forEach(x=>{per[x.game]=(per[x.game]||0)+(x.end-x.start)});
+  const ranked=Object.entries(per).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const first=done.length?new Date(done[done.length-1].start):null;
+  $("summary").innerHTML=`<span class="stat"><small>STREAM</small><b>${done.length}</b><small>回</small></span><span class="stat"><small>HOURS</small><b>${hrs(tot)}</b><small>時間</small></span>`+
+    (first?`<span class="stat"><small>SINCE</small><b>${first.getFullYear()}</b><small>${first.getMonth()+1}月〜</small></span>`:"")+
+    `<span class="chips">`+ranked.map(([k,v])=>`<button class="chip${k===g?" on":""}" data-game="${esc(k)}">${esc(k)} ${hrs(v)}h</button>`).join("")+`</span>`;
+  let h='<div class="list">',lastYm="";
+  if(!items.length)h+='<p class="list-empty">このゲームの配信はまだありません。</p>';
+  items.forEach(x=>{
+    const d=new Date(x.start),ym=`${d.getFullYear()}年 ${d.getMonth()+1}月`;
+    if(ym!==lastYm){h+=`<h3 class="list-ym">${ym}</h3>`;lastYm=ym}
+    const time=isUp(x)?`${hm(x.start)}〜 予定`:`${hm(x.start)}–${endLabel(x.start,x.end)}・${hrs(x.end-x.start)}h`;
+    h+=`<button class="li${flags(x)}" data-id="${x.id}">
+      <span class="li-th">${x.thumb?`<img src="${esc(x.thumb)}" alt="" loading="lazy">`:""}</span>
+      <span class="li-body"><span class="li-date">${ymd(x.start)}　${time}</span><span class="li-title">${esc(cleanTitle(x.title))}</span>${x.own?"":`<span class="li-ch">${esc(x.channel)} の枠</span>`}</span>
+    </button>`;
+  });
+  $("view").innerHTML=h+"</div>";$("view").scrollTop=0;
+}
+function flags(x){return(isUp(x)?" up":"")+(x.status==="live"?" live":"")+(x.collabs.length?" co":"")+(x.own?"":" guest")}
+
+let HH=22,COLW=100;
+const WKH=56; // 週表示の見出しの高さ（px）
+let MEAS=0;
+function measure(){const v=$("view");MEAS=v?v.clientHeight:0;
+  // カレンダー欄の残りの高さを24等分して1時間の高さにする（最小12px）
+  const avail=v?v.clientHeight-WKH-2:0;
+  // 線がにじまないよう整数ピクセル（偶数）にそろえる
+  HH=avail>200?Math.max(12,Math.min(44,2*Math.floor(avail/48))):22;
+  if(v){v.style.setProperty("--hh",HH+"px");v.style.setProperty("--wkh",WKH+"px");v.classList.toggle("dense",HH<22)}
+  COLW=Math.max(30,((v?v.clientWidth:700)-30)/7-4)}
+function renderWeek(){
+  measure();
+  const ws=sow(cursor),we=addDays(ws,7),today=sod(Date.now());
+  const s=new Date(ws),e=new Date(addDays(ws,6));
+  $("label").innerHTML=`<small>${s.getFullYear()}年</small>${s.getMonth()+1}/${s.getDate()} – ${e.getMonth()+1}/${e.getDate()}`;
+  let head='<div class="wk-grid wk-head"><div></div>',body='<div class="wk-grid"><div class="gutter">';
+  for(let h=1;h<24;h++)body+=`<span style="top:calc(${h} * var(--hh))">${h}</span>`;
+  body+="</div>";
+  for(let i=0;i<7;i++){
+    const d0=addDays(ws,i),d1=addDays(ws,i+1),dw=new Date(d0).getDay();
+    const segs=streams.filter(x=>x.end>d0&&x.start<d1);
+    const tot=segs.filter(x=>!isUp(x)).reduce((acc,x)=>acc+overlap(x.start,x.end,d0,d1),0);
+    const cls=(dw===6?" sat":dw===0?" sun":"")+(d0===today?" today":"");
+    head+=`<div class="dh${cls}"><span class="dd">${new Date(d0).getDate()}</span><span class="dw">${WD[dw]}</span><span class="dt">${tot?hrs(tot)+"h":""}</span>${deadlines.filter(x=>x.time>=d0&&x.time<d1).map(x=>`<button class="dl-tag" data-id="${x.id}" aria-label="締切 ${esc(x.title)}">締切</button>`).join("")}</div>`;
+    body+=`<div class="col${d0===today?" today":""}">`;
+    segs.forEach(x=>{
+      const a=Math.max(x.start,d0),b=Math.min(x.end,d1);
+      const first=Math.min(x.end,addDays(sod(x.start),1))-x.start;
+      const rest=x.end-x.start-first;
+      const top=(a-d0)/DAYMS*100,ht=(b-a)/DAYMS*100;
+      const cut=(a>x.start?" top-cut":"")+(b<x.end?" bot-cut":"");
+      const len=(b-a)/H;
+      // サムネイルは青を重ねて背景にうっすら敷く（予定のカードは除く）
+      const bg=x.thumb&&!isUp(x)?` style="--th:url(&quot;${esc(x.thumb)}&quot;)"`:"";
+      // 日付をまたぐ配信：時刻の札は必ず開始側。ゲーム名・タイトルは開始側に入りきらなければ翌日側へ
+      const isFirst=a===x.start, isSecond=!isFirst&&a===addDays(sod(x.start),1);
+      const firstPx=first/H*HH, restPx=rest/H*HH;
+      const sub=isUp(x)?"予定":x.status==="live"?"LIVE":`${hrs(x.end-x.start)}h`;
+      const gameFirst=firstPx>=24||restPx<24;              // ゲーム行（上の余白10px＋14px）
+      const titleFirst=firstPx>=(gameFirst?24:10)+32||restPx<(gameFirst?16+4:24+16); // タイトル2行ぶん
+      const px=len*HH;
+      let showG=false,showT=false;
+      if(isFirst){showG=gameFirst&&px>=24;showT=titleFirst&&px>=(showG?24:10)+16}
+      else if(isSecond){showG=!gameFirst&&px>=18;showT=!titleFirst&&px>=(showG?18:4)+16}
+      const gl=showG?`<span class="g">${esc(gShort(x.game))}<small>(${sub})</small></span>`:"";
+      const tt=showT?`<span class="tt${showG?"":" solo"}">${esc(cleanTitle(x.title))}</span>`:"";
+      const pill=isFirst?`<span class="pill">${isUp(x)?hm(x.start)+"〜":x.status==="live"?"LIVE":hm(x.start)}</span>`:"";
+      const inner=`${pill}<span class="evin${bg?" hasth":""}${isFirst?"":" next"}"${bg}>${gl}${tt}</span>`;
+      body+=`<button class="ev gx${cut}${flags(x)}" style="top:${top}%;height:${ht}%" data-id="${x.id}" aria-label="${esc(x.title)} ${hm(x.start)}から">${inner}</button>`;
+    });
+    posts.filter(p=>p.time>=d0&&p.time<d1).forEach(p=>{
+      body+=`<button class="post${p.ann?" ann":""}" style="top:${(p.time-d0)/DAYMS*100}%" data-id="${p.id}" aria-label="ポスト ${hm(p.time)}"></button>`;
+    });
+    if(d0===today){body+=`<div class="nowline" style="top:${(Date.now()-d0)/DAYMS*100}%"></div>`}
+    body+="</div>";
+  }
+  $("view").innerHTML=head+"</div>"+body+"</div>";
+  $("view").querySelector(".wk-head").addEventListener("click",ev=>{const b=ev.target.closest("[data-id]");if(b){ev.stopPropagation();const x=events.find(y=>y.id===b.dataset.id);if(x)openSheet(x)}});
+  summary(ws,we);
+}
+
+function renderMonth(){
+  const c=new Date(cursor),m0=new Date(c.getFullYear(),c.getMonth(),1).getTime(),m1=new Date(c.getFullYear(),c.getMonth()+1,1).getTime();
+  $("label").innerHTML=`<small>${c.getFullYear()}年</small>${c.getMonth()+1}月`;
+  const today=sod(Date.now());
+  let h='<div class="mo-head">'+["月","火","水","木","金","土","日"].map((w,i)=>`<span class="${i===5?"sat":i===6?"sun":""}">${w}</span>`).join("")+'</div><div class="mo-grid">';
+  for(let d0=sow(m0);d0<m1||new Date(d0).getDay()!==1;d0=addDays(d0,1)){
+    const d1=addDays(d0,1);
+    // 配信開始日のマスにサムネイルを置く（複数あれば縦に分割、最大3枠）
+    const started=streams.filter(x=>x.start>=d0&&x.start<d1).sort((a,b)=>a.start-b.start);
+    const tot=started.filter(x=>!isUp(x)).reduce((acc,x)=>acc+(x.end-x.start),0);
+    const tiles=started.slice(0,3).map(x=>`<span class="th${flags(x)}">${x.thumb?`<img src="${esc(x.thumb)}" alt="" loading="lazy">`:`<span class="ph gx"><b>${esc(gShort(x.game))}</b></span>`}${isUp(x)?'<span class="upl">予定</span>':""}</span>`).join("");
+    const out=d0<m0||d0>=m1;
+    const dn=String(new Date(d0).getDate()).padStart(2,"0");
+    h+=`<button class="mc${out?" out":""}${started.length?" has":""}${d0===today?" today":""}" data-day="${d0}" aria-label="${md(d0)}、配信${started.length}件。週表示を開く"${out?' tabindex="-1"':""}>
+      ${tiles}<span class="mn">${dn}</span>${tot?`<span class="mh">${hrs(tot)}h</span>`:""}${deadlines.some(x=>x.time>=d0&&x.time<d1)?'<span class="dl-badge">締切</span>':""}</button>`;
+  }
+  $("view").innerHTML=h+"</div>";
+  summary(m0,m1);
+}
+
+function renderDeadlines(){
+  const now=Date.now(),list=deadlines.filter(x=>x.time>=now).sort((a,b)=>a.time-b.time).slice(0,3),el=$("deadlines");
+  el.hidden=!list.length;
+  el.innerHTML=`<span class="dl-h">締切が近いもの</span>`+list.map(x=>{const days=Math.ceil((sod(x.time)-sod(now))/DAYMS);
+    return`<button class="dl-item" data-id="${x.id}"><span class="dl-left">${days<=0?"今日":"あと"+days+"日"}</span><span class="dl-title">${esc(x.title)}</span><span class="dl-date">${md(x.time)} ${hm(x.time)}</span></button>`}).join("");
+}
+function render(){
+  renderDeadlines();
+  $("v-week").setAttribute("aria-selected",view==="week");
+  $("v-month").setAttribute("aria-selected",view==="month");
+  $("view").classList.remove("v-week","v-month","v-list");$("view").classList.add("v-"+view);
+  document.body.classList.toggle("mode-list",view==="list");
+  if(view==="list"){renderList();return}
+  view==="week"?renderWeek():renderMonth();
+  // 集計などの描画で欄の高さが変わったら、測り直してもう一度描く
+  if(view==="week"&&Math.abs($("view").clientHeight-MEAS)>2)renderWeek();
+  try{localStorage.setItem("rou-view",view)}catch(e){}
+}
+let backView="week";
+
+function openSheet(ev){
+  const tag=$("sh-tag"),st=$("sh-status"),dl=$("sh-dl"),link=$("sh-link"),ex=$("sh-extra");
+  ex.innerHTML="";st.hidden=true;$("sh-thumb").hidden=true;
+  if(ev.kind==="stream"){
+    tag.className="tag gx";tag.textContent=ev.game;
+    const sts=isUp(ev)?(ev.manual?"予定（枠未作成）":"予定"):ev.status==="live"?"配信中":ev.collabs.length||!ev.own?"コラボ":"";
+    if(sts){st.hidden=false;st.textContent=sts}
+    $("sh-title").textContent=ev.title;
+    if(ev.thumb){const a=$("sh-thumb");a.hidden=false;a.href=ev.url;a.querySelector("img").src=ev.thumb;a.querySelector("img").alt=ev.title}
+    dl.innerHTML=`<dt>日付</dt><dd>${md(ev.start)}</dd>`+
+      (isUp(ev)?`<dt>時間</dt><dd>${hm(ev.start)} 開始予定</dd>`
+               :`<dt>時間</dt><dd>${hm(ev.start)} – ${ev.status==="live"?"配信中":endLabel(ev.start,ev.end)}</dd><dt>長さ</dt><dd>約${hrs(ev.end-ev.start)}時間</dd>`)+
+      `<dt>配信元</dt><dd>${esc(ev.channel)}${ev.own?"":"<span class=\"warn\">本人の枠なし</span>"}</dd>`;
+    link.href=ev.url;
+    link.textContent=ev.manual?"X で告知を開く ↗":ev.own?`${OWN}の枠を開く ↗`:`${ev.channel} の枠を開く ↗`;
+    // 「除外…」は追加ボタンを表示している端末（#edit）だけに出す
+    const canEdit=document.body.classList.contains("edit");
+    const opt=canEdit?'<button type="button" class="ex-opt" aria-expanded="false">除外…</button>':"";
+    const del=(url,title,label)=>canEdit?`<button type="button" class="ex-del" data-url="${esc(url)}" data-title="${esc(title)}" hidden>${label}</button>`:"";
+    if(ev.collabs.length){
+      ex.innerHTML=`<p class="ex-h"><span>コラボ相手の枠</span>${opt}</p><ul class="cl">`+ev.collabs.map(c=>
+        `<li><a href="${esc(c.url)}" target="_blank" rel="noopener"><b>${esc(c.channel)}</b><span>${esc(c.title||"")}</span><i aria-hidden="true">↗</i></a>${del(c.url,c.title||"","除外")}</li>`).join("")+"</ul>";
+    }
+    // 本人の枠がない単独カード（手動の予定は除く）
+    if(!ev.own&&!ev.manual&&canEdit&&/youtube\.com|youtu\.be/.test(ev.url)){
+      ex.innerHTML+=`<p class="ex-h"><span>この配信</span>${opt}</p><div class="ex-self">${del(ev.url,ev.title,"この配信を除外")}</div>`;
+    }
+  }else if(ev.kind==="deadline"){
+    tag.className="tag dl";tag.removeAttribute("style");tag.textContent="締切";
+    const days=Math.ceil((sod(ev.time)-sod(Date.now()))/DAYMS);
+    st.hidden=false;st.textContent=ev.time<Date.now()?"終了":days<=0?"今日まで":`あと${days}日`;
+    $("sh-title").textContent=ev.title;
+    dl.innerHTML=`<dt>締切</dt><dd>${md(ev.time)} ${hm(ev.time)}</dd>`;
+    link.href=ev.url;link.textContent="告知・販売ページを開く ↗";
+  }else{
+    tag.className="tag post-tag";tag.removeAttribute("style");tag.textContent=ev.ann?"配信告知":"ポスト";
+    $("sh-title").textContent=ev.text;
+    dl.innerHTML=`<dt>日付</dt><dd>${md(ev.time)}</dd><dt>時刻</dt><dd>${hm(ev.time)}</dd>`;
+    link.href=ev.url;link.textContent="X でポストを開く ↗";
+  }
+  $("backdrop").hidden=false;$("sheet").hidden=false;$("sh-close").focus();
+}
+function closeSheet(){$("sheet").hidden=true;if($("add-sheet").hidden)$("backdrop").hidden=true}
+
+$("view").addEventListener("click",e=>{
+  const b=e.target.closest("[data-id]");
+  if(b){const ev=events.find(x=>x.id===b.dataset.id);if(ev)openSheet(ev);return}
+  const d=e.target.closest("[data-day]");
+  if(d){cursor=+d.dataset.day;view="week";render()}
+});
+$("deadlines").addEventListener("click",e=>{const b=e.target.closest("[data-id]");if(b){const ev=events.find(x=>x.id===b.dataset.id);if(ev)openSheet(ev)}});
+// コラボ相手の枠の除外（GitHub の Issue で登録。押すと確認表示 → もう一度押すと登録画面へ）
+$("sh-extra").addEventListener("click",e=>{
+  const o=e.target.closest(".ex-opt");
+  if(o){const on=o.getAttribute("aria-expanded")!=="true";o.setAttribute("aria-expanded",on);o.textContent=on?"閉じる":"除外…";
+    let n=o.parentElement.nextElementSibling;if(n)n.querySelectorAll(".ex-del").forEach(b=>{b.hidden=!on;b.classList.remove("armed");b.textContent=b.dataset.label||b.textContent;b.dataset.label=b.textContent});return}
+  const b=e.target.closest(".ex-del");if(!b)return;
+  if(!b.classList.contains("armed")){b.dataset.label=b.dataset.label||b.textContent;b.classList.add("armed");b.textContent="押すと除外";return}
+  const m=String(b.dataset.url).match(/(?:v=|youtu\.be\/|\/live\/|\/shorts\/)([A-Za-z0-9_-]{11})/);if(!m)return;
+  const title=`[追加] 除外 ${m[1]}`,body=`type: exclude\nurl: ${b.dataset.url}\n\n（このまま Create を押してください。内容を書き換えないでください）\n対象：${b.dataset.title}`;
+  if(typeof REPO==="undefined"||!REPO){b.textContent="サンプルのため送信しません";b.disabled=true;return}
+  window.open(`https://github.com/${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`,"_blank","noopener");
+  b.textContent="GitHub で Create を押すと除外";b.disabled=true;
+});
+// ---- 年月を選ぶパネル（日付表示を押すと開く）----
+let pkYear=new Date().getFullYear();
+function yearRange(){const ys=streams.map(x=>new Date(x.start).getFullYear());const now=new Date().getFullYear();
+  return ys.length?[Math.min(...ys),Math.max(now,...ys)]:[now,now]}
+function renderPicker(){
+  const [y0,y1]=yearRange();pkYear=Math.min(Math.max(pkYear,y0),y1);
+  $("pk-year").textContent=pkYear+"年";$("pk-prev").disabled=pkYear<=y0;$("pk-next").disabled=pkYear>=y1;
+  const per=Array(12).fill(0);
+  streams.forEach(x=>{const d=new Date(x.start);if(d.getFullYear()===pkYear&&!isUp(x))per[d.getMonth()]+=x.end-x.start});
+  const c=new Date(cursor),now=new Date();
+  $("pk-grid").innerHTML=per.map((ms,i)=>{
+    const cur=c.getFullYear()===pkYear&&c.getMonth()===i,today=now.getFullYear()===pkYear&&now.getMonth()===i;
+    return`<button type="button" class="pk-m${ms?" has":""}${cur?" cur":""}${today?" now":""}" data-m="${i}"><b>${i+1}月</b><small>${ms?hrs(ms)+"h":"—"}</small></button>`}).join("");
+}
+function openPicker(){if(view==="list")return;pkYear=new Date(cursor).getFullYear();renderPicker();const pk=$("picker");pk.hidden=false;$("label").setAttribute("aria-expanded","true");
+  // 左パネルで切れないよう、画面に対して位置を決める
+  const r=$("label").getBoundingClientRect(),w=pk.offsetWidth,h=pk.offsetHeight;
+  pk.style.left=Math.max(8,Math.min(r.left-6,innerWidth-w-8))+"px";pk.style.top=Math.max(8,Math.min(r.bottom+8,innerHeight-h-8))+"px"}
+function closePicker(){$("picker").hidden=true;$("label").setAttribute("aria-expanded","false")}
+$("label").onclick=()=>{$("picker").hidden?openPicker():closePicker()};
+$("pk-prev").onclick=()=>{pkYear--;renderPicker()};
+$("pk-next").onclick=()=>{pkYear++;renderPicker()};
+$("pk-grid").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;
+  cursor=new Date(pkYear,+b.dataset.m,1).getTime();closePicker();render()});
+document.addEventListener("click",e=>{if(!$("picker").hidden&&!e.target.closest("#picker,#label"))closePicker()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closePicker()});
+$("summary").addEventListener("click",e=>{const b=e.target.closest("[data-game]");if(!b)return;
+  if(view!=="list")backView=view;listGame=b.dataset.game;view="list";render()});
+$("back").onclick=()=>{view=backView;render()};
+$("v-week").onclick=()=>{view="week";render()};
+$("v-month").onclick=()=>{view="month";render()};
+$("prev").onclick=()=>{if(view==="week")cursor=addDays(cursor,-7);else{const c=new Date(cursor);cursor=new Date(c.getFullYear(),c.getMonth()-1,1).getTime()}render()};
+$("next").onclick=()=>{if(view==="week")cursor=addDays(cursor,7);else{const c=new Date(cursor);cursor=new Date(c.getFullYear(),c.getMonth()+1,1).getTime()}render()};
+$("today").onclick=()=>{cursor=Date.now();render()};
+$("backdrop").onclick=closeSheet;$("sh-close").onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+getData().then(d=>{normalize(d);if(d.start)cursor=d.start;render()});
+let rz;addEventListener("resize",()=>{closePicker();clearTimeout(rz);rz=setTimeout(render,150)});
+})();
+// ---- 追加フォーム（GitHub の Issue 経由で登録）----
+// 登録先リポジトリは GitHub Pages の URL（ユーザー名.github.io/リポジトリ名/）から自動で決める
+const REPO=(()=>{const h=location.hostname;if(!h.endsWith(".github.io"))return"";const u=h.split(".")[0];const seg=location.pathname.split("/").filter(Boolean)[0];return seg?`${u}/${seg}`:`${u}/${h}`})();
+const SHOW_ADD_ALWAYS=false; // 「追加」ボタンは URL の末尾に #edit を付けて開いた端末にだけ表示
+(function(){
+  const $=id=>document.getElementById(id);
+  let edit=SHOW_ADD_ALWAYS;
+  try{if(location.hash==="#edit")localStorage.setItem("rou-edit","1");if(localStorage.getItem("rou-edit")==="1")edit=true}catch(e){if(location.hash==="#edit")edit=true}
+  $("add-open").hidden=!edit;
+  document.body.classList.toggle("edit",edit);
+  const sheet=$("add-sheet"),bd=$("backdrop");
+  const open=()=>{bd.hidden=false;sheet.hidden=false;$("f-done").hidden=true;$("f-err").textContent="";$("add-close").focus()};
+  const close=()=>{sheet.hidden=true;if($("sheet").hidden)bd.hidden=true};
+  $("add-open").onclick=open;$("add-close").onclick=close;
+  bd.addEventListener("click",close);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+  const type=()=>document.querySelector('input[name="ftype"]:checked').value;
+  document.querySelectorAll('input[name="ftype"]').forEach(r=>r.addEventListener("change",()=>{
+    document.querySelectorAll(".fgroup").forEach(g=>g.hidden=g.dataset.type!==type());$("f-err").textContent=""}));
+  const ytId=u=>{const m=String(u).match(/(?:v=|youtu\.be\/|\/live\/|\/shorts\/)([A-Za-z0-9_-]{11})/);return m?m[1]:null};
+  const xId=u=>{const m=String(u).match(/(?:x|twitter)\.com\/[^/]+\/status\/(\d+)/);return m?m[1]:null};
+  const xTime=id=>Number((BigInt(id)>>22n)+1288834974657n);
+  const pad=n=>String(n).padStart(2,"0");
+  const jst=t=>{const d=new Date(t+9*3600e3);return`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00+09:00`};
+  $("f-x").addEventListener("input",()=>{const id=xId($("f-x").value);
+    if(!id){$("f-xtime").textContent="";return}
+    const t=new Date(xTime(id));$("f-xtime").textContent=`投稿時刻：${t.getFullYear()}/${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${pad(t.getMinutes())}`});
+  $("add-form").addEventListener("submit",e=>{
+    e.preventDefault();const err=$("f-err");err.textContent="";
+    const t=type();let title,lines;
+    if(t==="collab"){
+      const u=$("f-yt").value.trim();if(!ytId(u)){err.textContent="YouTube の動画・配信の URL を入れてください（watch?v= や /live/ を含むもの）。";return}
+      title=`[追加] 他枠の配信 ${ytId(u)}`;lines=[`type: collab`,`url: ${u}`];
+    }else if(t==="schedule"){
+      const d=$("f-date").value,tm=$("f-time").value,ti=$("f-title").value.trim();
+      if(!d||!tm){err.textContent="日付と開始時刻を入れてください。";return}
+      const su=$("f-surl").value.trim();
+      title=`[追加] 配信予定 ${d} ${tm}`;
+      lines=[`type: schedule`,`start: ${d}T${tm}:00+09:00`,`title: ${ti||"配信予定"}`,`game: ${$("f-game").value.trim()||"その他"}`,`own: ${$("f-own").value==="own"?"yes":"no"}`];
+      if(su)lines.push(`url: ${su}`);
+    }else if(t==="deadline"){
+      const ti=$("f-dtitle").value.trim(),d=$("f-ddate").value,tm=$("f-dtime").value||"23:59",u=$("f-durl").value.trim();
+      if(!ti||!d){err.textContent="内容と締切日を入れてください。";return}
+      title=`[追加] 締切 ${d}`;lines=[`type: deadline`,`deadline: ${d}T${tm}:00+09:00`,`title: ${ti}`];
+      if(u)lines.push(`url: ${u}`);
+    }else{
+      const u=$("f-x").value.trim(),id=xId(u);if(!id){err.textContent="X のポストの URL を入れてください（/status/ を含むもの）。";return}
+      title=`[追加] ポスト ${id}`;lines=[`type: post`,`url: ${u}`,`time: ${jst(xTime(id))}`,`announce: ${$("f-ann").checked?"yes":"no"}`];
+    }
+    const body=lines.join("\n")+"\n\n（このまま Create を押してください。内容を書き換えないでください）";
+    if(!REPO){const done=$("f-done");done.hidden=false;
+      done.textContent=`サンプルのため送信先が未設定です。GitHub 版では、ここで GitHub の登録画面が開きます。送信される内容：\n${lines.join(" / ")}`;return}
+    const url=`https://github.com/${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+    const w=window.open(url,"_blank","noopener");
+    const done=$("f-done");done.hidden=false;
+    done.innerHTML=w===null?`GitHub の画面を開けませんでした。<a href="${url}" target="_blank" rel="noopener">こちら</a>から開いてください。`:"GitHub の画面で Create を押すと登録されます。";
+    e.target.reset();document.querySelectorAll(".fgroup").forEach(g=>g.hidden=g.dataset.type!=="collab");$("f-xtime").textContent="";
+  });
+})();
+</script>
+
+</body>
+</html>

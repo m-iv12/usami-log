@@ -1,0 +1,81 @@
+name: 配信データ更新
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # 3時間ごと
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: "全件を取り直す（1 で有効）"
+        default: "0"
+  issues:
+    types: [opened]          # ページの「追加」ボタンから
+  push:
+    branches: [main]         # 手でファイルを直したとき
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    # Issue はリポジトリの持ち主が作った「[追加]」だけを受け付ける
+    if: >-
+      github.event_name != 'issues' ||
+      (github.event.issue.user.login == github.repository_owner &&
+       startsWith(github.event.issue.title, '[追加]'))
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Add item from issue
+        if: github.event_name == 'issues'
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python add_item.py
+
+      - name: Fetch streams
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          FULL_REFRESH: ${{ github.event.inputs.full_refresh || '0' }}
+        run: python fetch_streams.py
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A *.json
+          git diff --cached --quiet || git commit -m "配信データを更新"
+          git pull --rebase
+          git push
+
+      - name: Close issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue close ${{ github.event.issue.number }} --repo ${{ github.repository }} --comment "反映しました。数分後にカレンダーに表示されます。"
+
+      - name: Report failure
+        if: failure() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "登録に失敗しました。Actions タブのログを確認してください。"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
