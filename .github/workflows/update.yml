@@ -53,13 +53,23 @@ jobs:
           for f in fetch_streams.py add_item.py; do
             if curl -fsSL "$base/$f" -o "/tmp/shared/$f"; then cp "/tmp/shared/$f" "$f"; echo "共通の $f を使用"; else echo "共通の $f を取得できなかったため手元のものを使用"; fi
           done
-          curl -fsSL "$base/save.sh" -o /tmp/shared/save.sh || echo "共通の save.sh を取得できませんでした"
+          for f in save.sh pending.py; do
+            curl -fsSL "$base/$f" -o "/tmp/shared/$f" || echo "共通の $f を取得できませんでした"
+          done
 
       - name: Add item from issue
         if: github.event_name == 'issues'
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: python add_item.py
+
+      # 開いたままの「[追加]」Issue（失敗・取り消しで登録されなかったもの）を、自動更新のたびにまとめて登録する
+      - name: Add items from open issues
+        if: github.event_name != 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f /tmp/shared/pending.py ]; then python /tmp/shared/pending.py add; fi
 
       - name: Fetch streams
         env:
@@ -84,6 +94,13 @@ jobs:
             git pull --rebase
             git push
           fi
+
+      - name: Close added issues
+        if: github.event_name != 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f /tmp/shared/pending.py ]; then python /tmp/shared/pending.py close; fi
 
       - name: Close issue
         if: github.event_name == 'issues'
