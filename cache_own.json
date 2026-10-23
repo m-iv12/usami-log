@@ -11628,9 +11628,9 @@
   "url": "https://www.youtube.com/watch?v=NwsoOAoPNbU",
   "thumb": "https://i.ytimg.com/vi/NwsoOAoPNbU/mqdefault.jpg?v=6adaffce",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-10-23T07:00:49Z",
-  "end": null,
+  "end": "2026-10-23T11:57:56Z",
   "own": true
  }
 }
