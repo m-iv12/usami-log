@@ -13430,5 +13430,25 @@
   "own": true,
   "game": "ONEPIECE 海のごちそうレストラン",
   "collabs": []
+ },
+ {
+  "id": "wQlOBGQDAm8",
+  "title": "【LoL】デュオランクをカゲツと【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-10-24T10:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=wQlOBGQDAm8",
+  "thumb": "https://i.ytimg.com/vi/wQlOBGQDAm8/mqdefault.jpg?v=6adc6fb3",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "LoL",
+  "collabs": [
+   {
+    "channel": "叢雲カゲツ / Murakumo Kagetsu【にじさんじ】",
+    "title": "【LoL】デュオランク w/宇佐美リト【宇佐美リト/にじさんじ】",
+    "url": "https://www.youtube.com/watch?v=9zlF4ogt4gQ"
+   }
+  ]
  }
 ]
