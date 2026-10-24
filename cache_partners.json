@@ -3037,9 +3037,9 @@
   "url": "https://www.youtube.com/watch?v=9zlF4ogt4gQ",
   "thumb": "https://i.ytimg.com/vi/9zlF4ogt4gQ/mqdefault.jpg?v=6adc728c",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-10-24T10:02:46Z",
-  "end": null,
+  "end": "2026-10-24T14:18:19Z",
   "own": false,
   "source": "auto"
  }
