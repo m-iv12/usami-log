@@ -13450,5 +13450,19 @@
     "url": "https://www.youtube.com/watch?v=9zlF4ogt4gQ"
    }
   ]
+ },
+ {
+  "id": "S7oy3ztyDIs",
+  "title": "【SuperBunnyMan】人とやる初見バニーマンをメロコさんと【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-10-25T12:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=S7oy3ztyDIs",
+  "thumb": "https://i.ytimg.com/vi/S7oy3ztyDIs/mqdefault.jpg?v=6add8d2e",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "SuperBunnyMan",
+  "collabs": []
  }
 ]
