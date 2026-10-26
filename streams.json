@@ -13464,5 +13464,19 @@
   "own": true,
   "game": "SuperBunnyMan",
   "collabs": []
+ },
+ {
+  "id": "tT49-8HaPqA",
+  "title": "【スト6】テンさんと一応初めましてのたますぃ10先【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-10-26T11:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=tT49-8HaPqA",
+  "thumb": "https://i.ytimg.com/vi/tT49-8HaPqA/mqdefault.jpg?v=6adef34f",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "スト6",
+  "collabs": []
  }
 ]
