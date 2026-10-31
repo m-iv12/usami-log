@@ -13520,5 +13520,19 @@
   "own": true,
   "game": "その他",
   "collabs": []
+ },
+ {
+  "id": "0uEiR9NXvPw",
+  "title": "【雑談】歌ってみた動画を投稿しますたしハッピーハロウィン【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "live",
+  "start": "2026-10-31T12:30:29Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=0uEiR9NXvPw",
+  "thumb": "https://i.ytimg.com/vi/0uEiR9NXvPw/mqdefault.jpg?v=6ae5dc51",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "雑談",
+  "collabs": []
  }
 ]
