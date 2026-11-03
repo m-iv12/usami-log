@@ -13548,5 +13548,19 @@
   "own": true,
   "game": "ONEPIECE 海のごちそうレストラン",
   "collabs": []
+ },
+ {
+  "id": "hz3-WcgmFpo",
+  "title": "【3秒ばなな】3秒ルール【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-11-03T11:45:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=hz3-WcgmFpo",
+  "thumb": "https://i.ytimg.com/vi/hz3-WcgmFpo/mqdefault.jpg?v=6ae9c4db",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "3秒ばなな",
+  "collabs": []
  }
 ]
