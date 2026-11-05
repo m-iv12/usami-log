@@ -13562,5 +13562,33 @@
   "own": true,
   "game": "3秒ばなな",
   "collabs": []
+ },
+ {
+  "id": "vXxCL8UTiKU",
+  "title": "【ONEPIECE 海のごちそうレストラン】いつもクソお世話になっております。 #4【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "done",
+  "start": "2026-11-05T13:01:01Z",
+  "end": "2026-11-05T13:10:21Z",
+  "url": "https://www.youtube.com/watch?v=vXxCL8UTiKU",
+  "thumb": "https://i.ytimg.com/vi/vXxCL8UTiKU/mqdefault.jpg",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "ONEPIECE 海のごちそうレストラン",
+  "collabs": []
+ },
+ {
+  "id": "dL9pxB8S46I",
+  "title": "【ONEPIECE 海のごちそうレストラン】いつもクソお世話になっております。 #4【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "live",
+  "start": "2026-11-05T13:12:46Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=dL9pxB8S46I",
+  "thumb": "https://i.ytimg.com/vi/dL9pxB8S46I/mqdefault.jpg?v=6aec8060",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "ONEPIECE 海のごちそうレストラン",
+  "collabs": []
  }
 ]
