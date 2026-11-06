@@ -13590,5 +13590,19 @@
   "own": true,
   "game": "ONEPIECE 海のごちそうレストラン",
   "collabs": []
+ },
+ {
+  "id": "f6hEphY_seI",
+  "title": "【LoL】空白の100年【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "live",
+  "start": "2026-11-06T07:21:23Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=f6hEphY_seI",
+  "thumb": "https://i.ytimg.com/vi/f6hEphY_seI/mqdefault.jpg?v=6aed7f6f",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "LoL",
+  "collabs": []
  }
 ]
