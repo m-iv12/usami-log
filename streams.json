@@ -13595,14 +13595,28 @@
   "id": "f6hEphY_seI",
   "title": "【LoL】空白の100年【宇佐美リト/にじさんじ】",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-11-06T07:21:23Z",
-  "end": null,
+  "end": "2026-11-06T10:54:07Z",
   "url": "https://www.youtube.com/watch?v=f6hEphY_seI",
-  "thumb": "https://i.ytimg.com/vi/f6hEphY_seI/mqdefault.jpg?v=6aed7f6f",
+  "thumb": "https://i.ytimg.com/vi/f6hEphY_seI/mqdefault.jpg",
   "channel": "宇佐美リト / Usami Rito【にじさんじ】",
   "own": true,
   "game": "LoL",
+  "collabs": []
+ },
+ {
+  "id": "_urdSLb7CjY",
+  "title": "【ゼルダの伝説 時のオカリナ】Switch2版！ほぼ初見プレイ！ #1 【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-11-06T12:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=_urdSLb7CjY",
+  "thumb": "https://i.ytimg.com/vi/_urdSLb7CjY/mqdefault.jpg?v=6aedb8e7",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "ゼルダの伝説 時のオカリナ",
   "collabs": []
  }
 ]
