@@ -13632,5 +13632,19 @@
   "own": true,
   "game": "ゼルダの伝説 時のオカリナ",
   "collabs": []
+ },
+ {
+  "id": "DG3BbWP1GKE",
+  "title": "【ONEPIECE 海のごちそうレストラン】いつもクソお世話になっております。 #5【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-11-09T13:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=DG3BbWP1GKE",
+  "thumb": "https://i.ytimg.com/vi/DG3BbWP1GKE/mqdefault.jpg?v=6af1ae5a",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "ONEPIECE 海のごちそうレストラン",
+  "collabs": []
  }
 ]
