@@ -13646,5 +13646,19 @@
   "own": true,
   "game": "ONEPIECE 海のごちそうレストラン",
   "collabs": []
+ },
+ {
+  "id": "a1KDiY9_gwA",
+  "title": "【雑談】ティルゲリスコーシノンビ～リ～ｼｯﾎﾟﾘ【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "live",
+  "start": "2026-11-11T12:32:26Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=a1KDiY9_gwA",
+  "thumb": "https://i.ytimg.com/vi/a1KDiY9_gwA/mqdefault.jpg?v=6af45c5f",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "雑談",
+  "collabs": []
  }
 ]
