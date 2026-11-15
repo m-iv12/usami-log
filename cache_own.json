@@ -11880,9 +11880,9 @@
   "url": "https://www.youtube.com/watch?v=dsN3vtA-cgY",
   "thumb": "https://i.ytimg.com/vi/dsN3vtA-cgY/mqdefault.jpg?v=6af99cd1",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-11-15T11:53:27Z",
-  "end": null,
+  "end": "2026-11-15T21:30:28Z",
   "own": true
  }
 }
