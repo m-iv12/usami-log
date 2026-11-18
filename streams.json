@@ -13718,23 +13718,17 @@
   "collabs": []
  },
  {
-  "id": "7qDyMGj-sfs",
-  "title": "【LoL】デュオランクをカゲツと【宇佐美リト/にじさんじ】",
+  "id": "izb1ObCrHzo",
+  "title": "【LoL】あのお方とデュオランク w/宇佐美リト【叢雲カゲツ/にじさんじ】",
   "kind": "stream",
-  "status": "live",
-  "start": "2026-11-18T13:12:38Z",
-  "end": null,
-  "url": "https://www.youtube.com/watch?v=7qDyMGj-sfs",
-  "thumb": "https://i.ytimg.com/vi/7qDyMGj-sfs/mqdefault.jpg?v=6afda1ca",
-  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
-  "own": true,
+  "status": "done",
+  "start": "2026-11-18T13:12:43Z",
+  "end": "2026-11-18T19:46:34Z",
+  "url": "https://www.youtube.com/watch?v=izb1ObCrHzo",
+  "thumb": "https://i.ytimg.com/vi/izb1ObCrHzo/mqdefault.jpg",
+  "channel": "叢雲カゲツ / Murakumo Kagetsu【にじさんじ】",
+  "own": false,
   "game": "LoL",
-  "collabs": [
-   {
-    "channel": "叢雲カゲツ / Murakumo Kagetsu【にじさんじ】",
-    "title": "【LoL】あのお方とデュオランク w/宇佐美リト【叢雲カゲツ/にじさんじ】",
-    "url": "https://www.youtube.com/watch?v=izb1ObCrHzo"
-   }
-  ]
+  "collabs": []
  }
 ]
