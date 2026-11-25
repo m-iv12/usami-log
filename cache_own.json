@@ -11990,11 +11990,11 @@
   "channel": "宇佐美リト / Usami Rito【にじさんじ】",
   "channel_id": "UCambvP8yxNDot4FzQc9cgiw",
   "url": "https://www.youtube.com/watch?v=N9PwpKTaXd8",
-  "thumb": "https://i.ytimg.com/vi/N9PwpKTaXd8/mqdefault.jpg?v=6b057ee3",
+  "thumb": "https://i.ytimg.com/vi/N9PwpKTaXd8/mqdefault.jpg",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-11-24T13:02:36Z",
-  "end": null,
+  "end": "2026-11-24T16:01:32Z",
   "own": true
  }
 }
