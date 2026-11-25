@@ -2,7 +2,9 @@ name: 配信データ更新
 
 on:
   schedule:
-    - cron: "7,37 * * * *"   # 30分ごと（GitHub の混雑で数分〜十数分遅れることがある）
+    # 予備。GitHub の定期実行は混雑時に大きく間引かれる（11/18 以降は1日2〜3回）ため、
+    # ふだんは下の「next」で自分から30分後の次の更新を起こし続ける。これは、その流れが止まったときに起こし直すためのもの
+    - cron: "7 */3 * * *"
   workflow_dispatch:
     inputs:
       full_refresh:
@@ -18,6 +20,7 @@ permissions:
   issues: write
   pages: write
   id-token: write
+  actions: write   # 次の更新を自分で起こすため
 
 # 自動更新どうしは1つずつ順番に実行する。ポストの追加は1件ずつ別に実行する
 # （同じグループに入れると、待ちが2件以上になったときに古い待ちが取り消され、追加が消えるため）
@@ -121,3 +124,18 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v4
         continue-on-error: true   # 同時に公開が重なって失敗しても、データは保存済みで次の更新で公開される
+
+  # 30分待ってから、次の更新を自分で起こす（GitHub の定期実行の間引きに左右されないように）。
+  # 定期実行・手動実行のときだけ。ポストの追加（Issue）や手でファイルを直したとき（push）からは起こさない（流れが増えないように）
+  next:
+    needs: update
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: 30分待つ
+        run: sleep 1800
+      - name: 次の更新を起こす
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/actions/workflows/update.yml/dispatches" -f ref=main
