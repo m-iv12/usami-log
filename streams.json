@@ -13806,5 +13806,19 @@
   "own": true,
   "game": "ゼルダの伝説 時のオカリナ",
   "collabs": []
+ },
+ {
+  "id": "_zi4341rNQE",
+  "title": "【Cursed Companions】にじさんじバスターズの方々と協力ホラゲー【宇佐美リト/にじさんじ】",
+  "kind": "stream",
+  "status": "upcoming",
+  "start": "2026-11-26T12:00:00Z",
+  "end": null,
+  "url": "https://www.youtube.com/watch?v=_zi4341rNQE",
+  "thumb": "https://i.ytimg.com/vi/_zi4341rNQE/mqdefault.jpg?v=6b0819cd",
+  "channel": "宇佐美リト / Usami Rito【にじさんじ】",
+  "own": true,
+  "game": "Cursed Companions",
+  "collabs": []
  }
 ]
