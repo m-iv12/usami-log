@@ -3067,9 +3067,9 @@
   "url": "https://www.youtube.com/watch?v=mNo_C2zKFkA",
   "thumb": "https://i.ytimg.com/vi/mNo_C2zKFkA/mqdefault.jpg?v=6b094341",
   "kind": "stream",
-  "status": "live",
+  "status": "done",
   "start": "2026-11-27T11:07:03Z",
-  "end": null,
+  "end": "2026-11-27T15:07:43Z",
   "source": "watch",
   "unit": "Oriens",
   "own": false
